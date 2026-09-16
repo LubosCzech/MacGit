@@ -48,6 +48,8 @@ final class AppStore {
         try? FileManager.default.createDirectory(at: supportURL.appendingPathComponent("workspaces"), withIntermediateDirectories: true)
         installAskpass()
         load()
+        // Klíče s passphrase uloženou v Klíčence macOS načteme do agenta, aby je git z GUI viděl.
+        Task { await SSHKeyManager.loadKeychainKeys() }
         isLoading = false
     }
 

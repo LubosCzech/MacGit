@@ -60,6 +60,8 @@ final class RepositoryModel {
     var selectedCommitFileID: String? { didSet { if oldValue != selectedCommitFileID { Task { await loadCommitDiff() } } } }
     var commitDiff: FileDiff?
 
+    /// Operace selhala kvůli zamčenému SSH klíči – UI se zeptá na passphrase a zkusí to znovu.
+    var sshUnlockRequest: SSHUnlockRequest?
     var busyTitle: String?
     var errorMessage: String?
     var toast: String?
@@ -258,16 +260,52 @@ final class RepositoryModel {
 
     // MARK: Operations
 
-    private func perform(_ title: String, success: String? = nil, _ work: () async throws -> Void) async {
+    private func perform(_ title: String, success: String? = nil, _ work: @escaping () async throws -> Void) async {
         busyTitle = title
-        defer { busyTitle = nil }
         do {
             try await work()
+            busyTitle = nil
             if let success { showToast(success) }
         } catch {
-            errorMessage = error.localizedDescription
+            busyTitle = nil
+            if SSHKeyManager.isKeyUnavailable(error), let request = makeUnlockRequest(error: error, title: title, success: success, work: work) {
+                sshUnlockRequest = request
+            } else {
+                errorMessage = error.localizedDescription
+            }
         }
         await refresh()
+    }
+
+    private func makeUnlockRequest(error: Error, title: String, success: String?, work: @escaping () async throws -> Void) -> SSHUnlockRequest? {
+        let keyPath: String?
+        switch project.auth {
+        case .system: keyPath = nil
+        case let .sshKey(path): keyPath = path
+        case .account, .password:
+            // Podepisování commitů SSH klíčem selže i při HTTPS přihlášení.
+            guard config.signCommits, config.signingFormat == "ssh" else { return nil }
+            keyPath = nil
+        }
+        let signingKey = config.signCommits && config.signingFormat == "ssh" && config.signingKey.hasSuffix(".pub")
+            ? String(config.signingKey.dropLast(4)) : nil
+        return SSHUnlockRequest(
+            message: error.localizedDescription,
+            suggestedKeyPath: keyPath ?? signingKey,
+            retry: { [weak self] in await self?.perform(title, success: success, work) }
+        )
+    }
+
+    /// Odemkne klíč (ssh-agent + Klíčenka macOS) a zopakuje původní operaci.
+    func unlock(_ request: SSHUnlockRequest, keyPath: String, passphrase: String, storeInKeychain: Bool) async throws {
+        guard let store else { return }
+        try await SSHKeyManager.addToAgent(keyPath, passphrase: passphrase, askpassPath: store.askpassPath, storeInKeychain: storeInKeychain)
+        if case let .sshKey(path) = project.auth, path == keyPath {
+            Keychain.set(passphrase, for: Keychain.sshPassphraseKey(path))
+            refreshCredentials()
+        }
+        sshUnlockRequest = nil
+        await request.retry()
     }
 
     func showToast(_ message: String) {
@@ -288,7 +326,7 @@ final class RepositoryModel {
         let message = workspace.draftMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         let changes = includedChanges
         let isAmend = amend
-        await perform(andPush ? "Commit a push…" : "Commit…", success: andPush ? "Commitnuto a pushnuto" : "Commitnuto \(changes.count) souborů") {
+        await perform(andPush ? "Commit a push…" : "Commit…", success: andPush ? "Commitnuto a pushnuto" : "Commitnuto \(changes.count) souborů") { [self] in
             try await repository.commit(message: message, changes: changes, amend: isAmend)
             workspace.draftMessage = ""
             amend = false
@@ -306,14 +344,14 @@ final class RepositoryModel {
     }
 
     func discard(_ changes: [FileChange]) async {
-        await perform("Zahazuji změny…", success: "Změny zahozeny") {
+        await perform("Zahazuji změny…", success: "Změny zahozeny") { [self] in
             try await repository.discard(changes)
         }
     }
 
     func shelve(_ changes: [FileChange], name: String) async {
         guard let store else { return }
-        await perform("Odkládám do shelfu…", success: "Uloženo do shelfu „\(name)“") {
+        await perform("Odkládám do shelfu…", success: "Uloženo do shelfu „\(name)“") { [self] in
             let shelf = Shelf(name: name, branch: status.branch.head, files: changes.map(\.path))
             let patch = try await repository.patch(for: changes)
             try patch.write(to: store.shelfDirectory(for: project.id).appendingPathComponent(shelf.patchFileName))
@@ -337,7 +375,7 @@ final class RepositoryModel {
             errorMessage = "Patch pro shelf „\(shelf.name)“ chybí."
             return
         }
-        await perform("Obnovuji ze shelfu…", success: "Obnoveno „\(shelf.name)“") {
+        await perform("Obnovuji ze shelfu…", success: "Obnoveno „\(shelf.name)“") { [self] in
             try await repository.apply(patch: data)
             // Obnovené soubory vrátíme do changelistu se jménem shelfu.
             let list = workspace.changelists.first { $0.name == shelf.name } ?? addChangelist(named: shelf.name)
@@ -355,48 +393,48 @@ final class RepositoryModel {
 
     func fetch() async {
         refreshCredentials()
-        await perform("Fetch…", success: "Fetch dokončen") { try await repository.fetch() }
+        await perform("Fetch…", success: "Fetch dokončen") { [self] in try await repository.fetch() }
     }
 
     func pull(rebase: Bool = false) async {
         refreshCredentials()
-        await perform("Pull…", success: "Pull dokončen") { try await repository.pull(rebase: rebase) }
+        await perform("Pull…", success: "Pull dokončen") { [self] in try await repository.pull(rebase: rebase) }
     }
 
     func push(force: Bool = false) async {
         refreshCredentials()
-        await perform("Push…", success: "Push dokončen") {
+        await perform("Push…", success: "Push dokončen") { [self] in
             try await repository.push(branch: status.branch, force: force)
         }
     }
 
     func checkout(_ branch: Branch) async {
-        await perform("Přepínám na \(branch.localName)…", success: "Přepnuto na \(branch.localName)") {
+        await perform("Přepínám na \(branch.localName)…", success: "Přepnuto na \(branch.localName)") { [self] in
             try await repository.checkout(branch)
         }
     }
 
     func createBranch(_ name: String, from start: String?, checkout: Bool) async {
-        await perform("Vytvářím větev…", success: "Větev \(name) vytvořena") {
+        await perform("Vytvářím větev…", success: "Větev \(name) vytvořena") { [self] in
             try await repository.createBranch(name, from: start, checkout: checkout)
         }
     }
 
     func deleteBranch(_ branch: Branch, force: Bool) async {
         refreshCredentials()
-        await perform("Mažu větev…", success: "Větev \(branch.name) smazána") {
+        await perform("Mažu větev…", success: "Větev \(branch.name) smazána") { [self] in
             try await repository.deleteBranch(branch, force: force)
         }
     }
 
     func merge(_ branch: Branch) async {
-        await perform("Merguji \(branch.name)…", success: "Merge dokončen") {
+        await perform("Merguji \(branch.name)…", success: "Merge dokončen") { [self] in
             try await repository.merge(branch)
         }
     }
 
     func renameBranch(_ branch: Branch, to name: String) async {
-        await perform("Přejmenovávám větev…") { try await repository.renameBranch(branch, to: name) }
+        await perform("Přejmenovávám větev…") { [self] in try await repository.renameBranch(branch, to: name) }
     }
 
     // MARK: History
@@ -442,7 +480,7 @@ final class RepositoryModel {
     }
 
     func saveConfig(_ newConfig: RepositoryConfig) async {
-        await perform("Ukládám nastavení…", success: "Nastavení uloženo") {
+        await perform("Ukládám nastavení…", success: "Nastavení uloženo") { [self] in
             try await repository.setConfig("user.name", newConfig.localName)
             try await repository.setConfig("user.email", newConfig.localEmail)
             try await repository.setConfig("commit.gpgsign", newConfig.signCommits ? "true" : "false")
@@ -453,13 +491,13 @@ final class RepositoryModel {
     }
 
     func saveRemote(name: String, url: String, isNew: Bool) async {
-        await perform("Ukládám remote…") {
+        await perform("Ukládám remote…") { [self] in
             if isNew { try await repository.addRemote(name: name, url: url) } else { try await repository.setRemoteURL(name: name, url: url) }
         }
     }
 
     func removeRemote(_ remote: Remote) async {
-        await perform("Odebírám remote…") { try await repository.removeRemote(name: remote.name) }
+        await perform("Odebírám remote…") { [self] in try await repository.removeRemote(name: remote.name) }
     }
 
     // MARK: Hosting

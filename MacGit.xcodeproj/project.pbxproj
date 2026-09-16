@@ -1,0 +1,1074 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0765B74A081BD2A06B674A80 /* push-to-checkout.sample in Resources */ = {isa = PBXBuildFile; fileRef = B4735A10775AB698661F348A /* push-to-checkout.sample */; };
+		07DBD51DE024AFCCF79EC0B3 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A0BD53FFB494757CD42D6D /* Keychain.swift */; };
+		10EFA5068D241B5B481FB5F8 /* pre-rebase.sample in Resources */ = {isa = PBXBuildFile; fileRef = 0FFC7C599BC87D6E2A44FE7E /* pre-rebase.sample */; };
+		29A359EC327FB1D3AB01DD31 /* pre-merge-commit.sample in Resources */ = {isa = PBXBuildFile; fileRef = E40A9D5533EB0DBA51779FCB /* pre-merge-commit.sample */; };
+		2A16C985B9CE599F1DA20F4D /* ChangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6A51345CE92B3AB14BE0F4 /* ChangesView.swift */; };
+		3C8F85A4C51F5BCAB536E089 /* prepare-commit-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = EF19B1A8E34A2C7591C3386C /* prepare-commit-msg.sample */; };
+		487F80338F1603CFA9AA0C0F /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2249380C1CD83C555D3F6F /* AppStore.swift */; };
+		4F045A6B496D8422E304468F /* fsmonitor-watchman.sample in Resources */ = {isa = PBXBuildFile; fileRef = 0C3809023BC25C55D95B5080 /* fsmonitor-watchman.sample */; };
+		4F1A831303E04BB285B48F82 /* RepositoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F468A9B52659B12DD45D6A26 /* RepositoryView.swift */; };
+		528422AB4950163B81B85334 /* BranchesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3246A422A020A2AA140EB92E /* BranchesView.swift */; };
+		60B6C4FBD5B8F51743861149 /* CommitPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1676475863078FE183D1AB07 /* CommitPanel.swift */; };
+		660C7936A146D4437F641A4A /* AuthEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF95FDFB1BE82B1455AE9509 /* AuthEditor.swift */; };
+		73462F6E9EE35845C12F802C /* ProjectSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E016C22ECB77815B01BE631E /* ProjectSettingsView.swift */; };
+		787FDDC04270365D105ED66F /* GitKit in Frameworks */ = {isa = PBXBuildFile; productRef = BBAD4A27BE81CBD6F66E2F7A /* GitKit */; };
+		7C5D237FFF5C0D9EC57F09A9 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8C77B26C7D00A67A7F5720 /* AppModels.swift */; };
+		80219AF6FFFE6AE57F732ED7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABC55CD09B6DF204CB25F52 /* Components.swift */; };
+		8B27DC5AF88C7D4A53C0ABD6 /* RepositoryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */; };
+		8DCD29DE08052C328DCB051B /* RepositorySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0491A14E5F4CC565658AC0 /* RepositorySheets.swift */; };
+		9025144D8E2F254D8AB892DF /* SSHUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022AF7F3BD1C70C7C6DAA265 /* SSHUnlockSheet.swift */; };
+		972C69BE48FA358F73A19697 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49326877964FB96B73AA1A5 /* SettingsView.swift */; };
+		9B439EDCD873840961860722 /* MacGitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1278DA0A41DBADE72C5DE6E7 /* MacGitApp.swift */; };
+		9F5674D1C1DC19C792A0C824 /* pre-applypatch.sample in Resources */ = {isa = PBXBuildFile; fileRef = FE5F503C94E27E801F32982C /* pre-applypatch.sample */; };
+		A263FFD6D9874DC462E5D765 /* pre-commit.sample in Resources */ = {isa = PBXBuildFile; fileRef = 7B1ADB4F55FB6AEE388DB8C7 /* pre-commit.sample */; };
+		A8275B9B9C5BB06F5DCFD6DE /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA72394C6ACE1CF3160AD101 /* RootView.swift */; };
+		C23DC8B3FD660D82D0D582C5 /* ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207793ECDD2EEFBE4CBE611 /* ShelfView.swift */; };
+		CD803DA24FBD5BED664AD376 /* applypatch-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = 9DCDCDEAE2591732113E479A /* applypatch-msg.sample */; };
+		DFE6A650A99B10B31E3F2299 /* RepositoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25782B6957A86E0AFA519E75 /* RepositoryModel.swift */; };
+		E51615D6BF2BFD3F923C785C /* pre-receive.sample in Resources */ = {isa = PBXBuildFile; fileRef = 54DF6CA5668CFD542B861D31 /* pre-receive.sample */; };
+		E95D58687739B9A4CC065116 /* update.sample in Resources */ = {isa = PBXBuildFile; fileRef = C04213E05A9881AD8FBE743A /* update.sample */; };
+		E9B4CE18314E7AFCC879139A /* commit-msg.sample in Resources */ = {isa = PBXBuildFile; fileRef = F2678B04F5CF8D2BD6325BEA /* commit-msg.sample */; };
+		EBBE51B4FF415B1C72223CEC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8C7209449385B3CB2FDF3B8B /* Assets.xcassets */; };
+		EC03477520C1D05BBEC8FBB9 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB200A52A61FED870B3C0EBE /* SidebarView.swift */; };
+		EF69F339C9DDF16E245B5AED /* post-update.sample in Resources */ = {isa = PBXBuildFile; fileRef = 0A78D116C5F3EE0A8E570A84 /* post-update.sample */; };
+		F323CA101B21E2B58EC4D499 /* pre-push.sample in Resources */ = {isa = PBXBuildFile; fileRef = 32233626E306B61AD00E5B45 /* pre-push.sample */; };
+		F82419B7644EC6038E00C2FE /* DiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF1A85346BAAD8DB80FF65C1 /* DiffView.swift */; };
+		FC03260CC8B3F614FA44FC24 /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF3A26D6D31B36538BFA922 /* HistoryView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		022AF7F3BD1C70C7C6DAA265 /* SSHUnlockSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHUnlockSheet.swift; sourceTree = "<group>"; };
+		04C4D3CDE5EF29EF0C06F40D /* f9c4ef00fdb610fc0dadab159f4f15fc4413fc */ = {isa = PBXFileReference; path = f9c4ef00fdb610fc0dadab159f4f15fc4413fc; sourceTree = "<group>"; };
+		0839392EC55AD5BDF1D04987 /* 244901ec94f0a6c71ac32ce2dec57d80d87fca */ = {isa = PBXFileReference; path = 244901ec94f0a6c71ac32ce2dec57d80d87fca; sourceTree = "<group>"; };
+		0986859AE476508678AB772F /* e133ee631a04af9f5c9df00620114c543842c5 */ = {isa = PBXFileReference; path = e133ee631a04af9f5c9df00620114c543842c5; sourceTree = "<group>"; };
+		0A78D116C5F3EE0A8E570A84 /* post-update.sample */ = {isa = PBXFileReference; path = "post-update.sample"; sourceTree = "<group>"; };
+		0C3809023BC25C55D95B5080 /* fsmonitor-watchman.sample */ = {isa = PBXFileReference; path = "fsmonitor-watchman.sample"; sourceTree = "<group>"; };
+		0F16418DCEFCDB7A284EFC9C /* 5898c8324049694e065c8fb6b8649439b75923 */ = {isa = PBXFileReference; path = 5898c8324049694e065c8fb6b8649439b75923; sourceTree = "<group>"; };
+		0FD44371C2EE9786EF2D97FB /* cba7dff03f1ab04c920fb8f00e73588f5e5aa2 */ = {isa = PBXFileReference; path = cba7dff03f1ab04c920fb8f00e73588f5e5aa2; sourceTree = "<group>"; };
+		0FFC7C599BC87D6E2A44FE7E /* pre-rebase.sample */ = {isa = PBXFileReference; path = "pre-rebase.sample"; sourceTree = "<group>"; };
+		1278DA0A41DBADE72C5DE6E7 /* MacGitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacGitApp.swift; sourceTree = "<group>"; };
+		154495A657F7DFC07B5D006E /* db2b38813ca19c0ceae3df6d8611b6b1ec880c */ = {isa = PBXFileReference; path = db2b38813ca19c0ceae3df6d8611b6b1ec880c; sourceTree = "<group>"; };
+		154E375B7B7A6522D17D9E33 /* HEAD */ = {isa = PBXFileReference; path = HEAD; sourceTree = "<group>"; };
+		1676475863078FE183D1AB07 /* CommitPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitPanel.swift; sourceTree = "<group>"; };
+		1C860E4DD1A71B9EFBC7A827 /* 20191e8de3eaf66498cb2939b7f8f4fb4f6f5a */ = {isa = PBXFileReference; path = 20191e8de3eaf66498cb2939b7f8f4fb4f6f5a; sourceTree = "<group>"; };
+		1ED1E39B3F534186BF228506 /* afb3329d02f52ea4997e7380326780418efef1 */ = {isa = PBXFileReference; path = afb3329d02f52ea4997e7380326780418efef1; sourceTree = "<group>"; };
+		25782B6957A86E0AFA519E75 /* RepositoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryModel.swift; sourceTree = "<group>"; };
+		2B6A51345CE92B3AB14BE0F4 /* ChangesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangesView.swift; sourceTree = "<group>"; };
+		2F8C77B26C7D00A67A7F5720 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		32233626E306B61AD00E5B45 /* pre-push.sample */ = {isa = PBXFileReference; path = "pre-push.sample"; sourceTree = "<group>"; };
+		324382165F60A37532CDF699 /* 743931d0bc979f6b6cbe30ab49121dadef6203 */ = {isa = PBXFileReference; path = 743931d0bc979f6b6cbe30ab49121dadef6203; sourceTree = "<group>"; };
+		3246A422A020A2AA140EB92E /* BranchesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchesView.swift; sourceTree = "<group>"; };
+		39913E45D203D7B40F469592 /* 027d401ef01483a531da8081a7a614933edd32 */ = {isa = PBXFileReference; path = 027d401ef01483a531da8081a7a614933edd32; sourceTree = "<group>"; };
+		39CDC994452356B91B861EDB /* description */ = {isa = PBXFileReference; path = description; sourceTree = "<group>"; };
+		422DBB18A6674B9543BFF962 /* 3a84923c61646a138f3a487eeec65671732da5 */ = {isa = PBXFileReference; path = 3a84923c61646a138f3a487eeec65671732da5; sourceTree = "<group>"; };
+		4543F4CDA6D2F65AC07DBEC8 /* ab2d4ed62f0318b679137281bb76140a15f101 */ = {isa = PBXFileReference; path = ab2d4ed62f0318b679137281bb76140a15f101; sourceTree = "<group>"; };
+		4DE755014CAE9D9A7F52F825 /* COMMIT_EDITMSG */ = {isa = PBXFileReference; path = COMMIT_EDITMSG; sourceTree = "<group>"; };
+		50AA60C932575E5FB322ECAA /* e2eecd67f2b8271ba8c1e8d00eb44c4c91285a */ = {isa = PBXFileReference; path = e2eecd67f2b8271ba8c1e8d00eb44c4c91285a; sourceTree = "<group>"; };
+		5434A9A0EAA214A3B5408111 /* ff4d76dff7bc152919d460ea412dc93c7b754e */ = {isa = PBXFileReference; path = ff4d76dff7bc152919d460ea412dc93c7b754e; sourceTree = "<group>"; };
+		54DF6CA5668CFD542B861D31 /* pre-receive.sample */ = {isa = PBXFileReference; path = "pre-receive.sample"; sourceTree = "<group>"; };
+		551BF831CBECC92FDA42E941 /* 36b54b276f9e2aecc28c6d257543c57839f081 */ = {isa = PBXFileReference; path = 36b54b276f9e2aecc28c6d257543c57839f081; sourceTree = "<group>"; };
+		5F2A3D92F6BCCCB76560CA4F /* f3b9132540cfb4f9ef88062ea92e962468959f */ = {isa = PBXFileReference; path = f3b9132540cfb4f9ef88062ea92e962468959f; sourceTree = "<group>"; };
+		60B961887FB68468F19C595C /* 01982ce60fb924910adc4a3cde27282f77337b */ = {isa = PBXFileReference; path = 01982ce60fb924910adc4a3cde27282f77337b; sourceTree = "<group>"; };
+		61A0BD53FFB494757CD42D6D /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		65927DEBA5118A9B8F9A2279 /* e8918f0488783846aeb87d27ed91b87cb5162d */ = {isa = PBXFileReference; path = e8918f0488783846aeb87d27ed91b87cb5162d; sourceTree = "<group>"; };
+		6A0491A14E5F4CC565658AC0 /* RepositorySheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositorySheets.swift; sourceTree = "<group>"; };
+		71EBF7BE8BB506D3C840704A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		74448D7943F95916F00E835D /* 5cc81d8a35c3521167abbd74f1080ef43d8513 */ = {isa = PBXFileReference; path = 5cc81d8a35c3521167abbd74f1080ef43d8513; sourceTree = "<group>"; };
+		77FFF4A1FCE2D33BBAE894AD /* 392fca14cfd05078d908692dfa798ce7b41da6 */ = {isa = PBXFileReference; path = 392fca14cfd05078d908692dfa798ce7b41da6; sourceTree = "<group>"; };
+		7B1ADB4F55FB6AEE388DB8C7 /* pre-commit.sample */ = {isa = PBXFileReference; path = "pre-commit.sample"; sourceTree = "<group>"; };
+		7E6966ADC3918940E6474CC3 /* 66f8d0d941af154ca19547308ef3290683fe68 */ = {isa = PBXFileReference; path = 66f8d0d941af154ca19547308ef3290683fe68; sourceTree = "<group>"; };
+		7EE2BA5891FF9B9C72E531BD /* GitKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GitKit; path = Packages/GitKit; sourceTree = SOURCE_ROOT; };
+		8BCD092AF3337856C5088BA5 /* MacGit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacGit.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C7209449385B3CB2FDF3B8B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		954CC5858CEACBD3397D63E8 /* a7178e8d40f87f8e388a010d3105b5f6b3c485 */ = {isa = PBXFileReference; path = a7178e8d40f87f8e388a010d3105b5f6b3c485; sourceTree = "<group>"; };
+		9741A74F41E666DCDA948A38 /* e1a62cdc26f538e928ed7933b2077d5ba69277 */ = {isa = PBXFileReference; path = e1a62cdc26f538e928ed7933b2077d5ba69277; sourceTree = "<group>"; };
+		97BFB7B5FC98B8AC259ABF2B /* index */ = {isa = PBXFileReference; path = index; sourceTree = "<group>"; };
+		9A9DC4B322383D016DBFD891 /* main */ = {isa = PBXFileReference; path = main; sourceTree = "<group>"; };
+		9C2249380C1CD83C555D3F6F /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
+		9C48ACBDDB0D44B125588B26 /* exclude */ = {isa = PBXFileReference; path = exclude; sourceTree = "<group>"; };
+		9D51E93819BC628E1FE9929B /* 3b682c77bdc4809c5a0253857575a7bdc08761 */ = {isa = PBXFileReference; path = 3b682c77bdc4809c5a0253857575a7bdc08761; sourceTree = "<group>"; };
+		9DCDCDEAE2591732113E479A /* applypatch-msg.sample */ = {isa = PBXFileReference; path = "applypatch-msg.sample"; sourceTree = "<group>"; };
+		9DF3A26D6D31B36538BFA922 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		A196EE5B8CAD2DD175FBD47E /* d7c4639c46fbced53cbfa1192b353ae6591d71 */ = {isa = PBXFileReference; path = d7c4639c46fbced53cbfa1192b353ae6591d71; sourceTree = "<group>"; };
+		A58389F1CB5D61394A9AAEF2 /* d494eb6e6f79bbb05259b84e75637dd1534b3d */ = {isa = PBXFileReference; path = d494eb6e6f79bbb05259b84e75637dd1534b3d; sourceTree = "<group>"; };
+		A8F2CF834E2E8CDD83F23AC1 /* 4a1a157bee341521e16d1ceaf39af80858ec97 */ = {isa = PBXFileReference; path = 4a1a157bee341521e16d1ceaf39af80858ec97; sourceTree = "<group>"; };
+		AA581009A61E46AB2AB6C59F /* 2ea3efafee49cc95b074c63cc39fcb7b61a81f */ = {isa = PBXFileReference; path = 2ea3efafee49cc95b074c63cc39fcb7b61a81f; sourceTree = "<group>"; };
+		B2F8680539F985929A7F5E98 /* 36039633412d5049c10dc679f0c8313aaac215 */ = {isa = PBXFileReference; path = 36039633412d5049c10dc679f0c8313aaac215; sourceTree = "<group>"; };
+		B4735A10775AB698661F348A /* push-to-checkout.sample */ = {isa = PBXFileReference; path = "push-to-checkout.sample"; sourceTree = "<group>"; };
+		B4F5BD84254D17E40BDC3E6E /* 025dfa3dc607a666b06e63a1619f3e4bab974b */ = {isa = PBXFileReference; path = 025dfa3dc607a666b06e63a1619f3e4bab974b; sourceTree = "<group>"; };
+		BA72394C6ACE1CF3160AD101 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		BABC55CD09B6DF204CB25F52 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		BF9B92FFF15BA3ED97FAD7B2 /* 720840fa1eeb042075667a59e346ef21de25b2 */ = {isa = PBXFileReference; path = 720840fa1eeb042075667a59e346ef21de25b2; sourceTree = "<group>"; };
+		C04213E05A9881AD8FBE743A /* update.sample */ = {isa = PBXFileReference; path = update.sample; sourceTree = "<group>"; };
+		C207793ECDD2EEFBE4CBE611 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
+		C2B107D66471F78D22697A99 /* 155af43f89741502aca4bd3c018a9fef3904c7 */ = {isa = PBXFileReference; path = 155af43f89741502aca4bd3c018a9fef3904c7; sourceTree = "<group>"; };
+		CB9517D65F65F12FB42826DD /* 7fdb9ae6daffa8f8a9ea4881c9918a7c8b418b */ = {isa = PBXFileReference; path = 7fdb9ae6daffa8f8a9ea4881c9918a7c8b418b; sourceTree = "<group>"; };
+		D0DB2E1E5272DB4CFF710D92 /* b02f698916b73824bfd999e51037cbac3df712 */ = {isa = PBXFileReference; path = b02f698916b73824bfd999e51037cbac3df712; sourceTree = "<group>"; };
+		D2AF037313E4E11096975ED3 /* 09abfdebced44a15a3a299a268813905daeeaf */ = {isa = PBXFileReference; path = 09abfdebced44a15a3a299a268813905daeeaf; sourceTree = "<group>"; };
+		D454EFBEA1E9F878F391E270 /* HEAD */ = {isa = PBXFileReference; path = HEAD; sourceTree = "<group>"; };
+		D49326877964FB96B73AA1A5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D7F83D2F5E568C4AFC87DC1D /* bdd002ac43cfe26b82afe29bbd987ce3d234bd */ = {isa = PBXFileReference; path = bdd002ac43cfe26b82afe29bbd987ce3d234bd; sourceTree = "<group>"; };
+		D977CA25C0C887A210FA2EE7 /* 301728f2db8f949b81c6b11fcf03c78b7e710f */ = {isa = PBXFileReference; path = 301728f2db8f949b81c6b11fcf03c78b7e710f; sourceTree = "<group>"; };
+		DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryWatcher.swift; sourceTree = "<group>"; };
+		DF95FDFB1BE82B1455AE9509 /* AuthEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthEditor.swift; sourceTree = "<group>"; };
+		E016C22ECB77815B01BE631E /* ProjectSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectSettingsView.swift; sourceTree = "<group>"; };
+		E40A9D5533EB0DBA51779FCB /* pre-merge-commit.sample */ = {isa = PBXFileReference; path = "pre-merge-commit.sample"; sourceTree = "<group>"; };
+		E7E7109D7400AF1FE3EE28B8 /* 14f7e76fbae77e4d2d896a7428a54f3aeaf24d */ = {isa = PBXFileReference; path = 14f7e76fbae77e4d2d896a7428a54f3aeaf24d; sourceTree = "<group>"; };
+		EB200A52A61FED870B3C0EBE /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		EF19B1A8E34A2C7591C3386C /* prepare-commit-msg.sample */ = {isa = PBXFileReference; path = "prepare-commit-msg.sample"; sourceTree = "<group>"; };
+		EF1A85346BAAD8DB80FF65C1 /* DiffView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffView.swift; sourceTree = "<group>"; };
+		F2678B04F5CF8D2BD6325BEA /* commit-msg.sample */ = {isa = PBXFileReference; path = "commit-msg.sample"; sourceTree = "<group>"; };
+		F26B2D53F7B6E039007D38B9 /* c030db6fac869dcbb31b10a81134359b7175c4 */ = {isa = PBXFileReference; path = c030db6fac869dcbb31b10a81134359b7175c4; sourceTree = "<group>"; };
+		F2E2D9D10931B0E229E97211 /* ba3a3fa9eefde2be5715a5c600360bbd6ce1fd */ = {isa = PBXFileReference; path = ba3a3fa9eefde2be5715a5c600360bbd6ce1fd; sourceTree = "<group>"; };
+		F468A9B52659B12DD45D6A26 /* RepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryView.swift; sourceTree = "<group>"; };
+		F672D60B5693D2DC4D2A3BC9 /* 626791139e47f5b5628e0148631730ee23214b */ = {isa = PBXFileReference; path = 626791139e47f5b5628e0148631730ee23214b; sourceTree = "<group>"; };
+		F6DDC735681057370690F493 /* config */ = {isa = PBXFileReference; path = config; sourceTree = "<group>"; };
+		F9638D5A86F94A223D6C2DEA /* MacGit.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacGit.entitlements; sourceTree = "<group>"; };
+		FE5F503C94E27E801F32982C /* pre-applypatch.sample */ = {isa = PBXFileReference; path = "pre-applypatch.sample"; sourceTree = "<group>"; };
+		FF41341530E69BE4A2D68874 /* main */ = {isa = PBXFileReference; path = main; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		48EE5D51711A7521C2C83FD2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787FDDC04270365D105ED66F /* GitKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		02FA34364C5492BA29F3C244 /* Changes */ = {
+			isa = PBXGroup;
+			children = (
+				1676475863078FE183D1AB07 /* CommitPanel.swift */,
+				2B6A51345CE92B3AB14BE0F4 /* ChangesView.swift */,
+			);
+			path = Changes;
+			sourceTree = "<group>";
+		};
+		090AFA6C6CCDB323C7CB88A7 /* a2 */ = {
+			isa = PBXGroup;
+			children = (
+				0839392EC55AD5BDF1D04987 /* 244901ec94f0a6c71ac32ce2dec57d80d87fca */,
+			);
+			path = a2;
+			sourceTree = "<group>";
+		};
+		0975A5F35CE82CFF9EB7238E /* f4 */ = {
+			isa = PBXGroup;
+			children = (
+				D0DB2E1E5272DB4CFF710D92 /* b02f698916b73824bfd999e51037cbac3df712 */,
+			);
+			path = f4;
+			sourceTree = "<group>";
+		};
+		0F4019C33A5E40FFB68A9D4F /* fd */ = {
+			isa = PBXGroup;
+			children = (
+				0986859AE476508678AB772F /* e133ee631a04af9f5c9df00620114c543842c5 */,
+			);
+			path = fd;
+			sourceTree = "<group>";
+		};
+		0FAF05101815D4078B34881A /* b8 */ = {
+			isa = PBXGroup;
+			children = (
+				AA581009A61E46AB2AB6C59F /* 2ea3efafee49cc95b074c63cc39fcb7b61a81f */,
+			);
+			path = b8;
+			sourceTree = "<group>";
+		};
+		1328599D51AC880BCA870803 /* 22 */ = {
+			isa = PBXGroup;
+			children = (
+				39913E45D203D7B40F469592 /* 027d401ef01483a531da8081a7a614933edd32 */,
+			);
+			path = 22;
+			sourceTree = "<group>";
+		};
+		1A36D0721C1677600919035C /* 55 */ = {
+			isa = PBXGroup;
+			children = (
+				A196EE5B8CAD2DD175FBD47E /* d7c4639c46fbced53cbfa1192b353ae6591d71 */,
+			);
+			path = 55;
+			sourceTree = "<group>";
+		};
+		1B405DFD5B541AF8D73789D8 /* Shelf */ = {
+			isa = PBXGroup;
+			children = (
+				C207793ECDD2EEFBE4CBE611 /* ShelfView.swift */,
+			);
+			path = Shelf;
+			sourceTree = "<group>";
+		};
+		1CCEE09FE0853D7F4E4B2405 /* 04 */ = {
+			isa = PBXGroup;
+			children = (
+				C2B107D66471F78D22697A99 /* 155af43f89741502aca4bd3c018a9fef3904c7 */,
+			);
+			path = 04;
+			sourceTree = "<group>";
+		};
+		212ED4625A08788E80B6BE5B /* 08 */ = {
+			isa = PBXGroup;
+			children = (
+				F2E2D9D10931B0E229E97211 /* ba3a3fa9eefde2be5715a5c600360bbd6ce1fd */,
+			);
+			path = 08;
+			sourceTree = "<group>";
+		};
+		2790027AFA3A092434AE6E78 /* df */ = {
+			isa = PBXGroup;
+			children = (
+				77FFF4A1FCE2D33BBAE894AD /* 392fca14cfd05078d908692dfa798ce7b41da6 */,
+			);
+			path = df;
+			sourceTree = "<group>";
+		};
+		2B0B18DAEB04A0D617E03648 /* 43 */ = {
+			isa = PBXGroup;
+			children = (
+				74448D7943F95916F00E835D /* 5cc81d8a35c3521167abbd74f1080ef43d8513 */,
+				1ED1E39B3F534186BF228506 /* afb3329d02f52ea4997e7380326780418efef1 */,
+			);
+			path = 43;
+			sourceTree = "<group>";
+		};
+		301AE97AF7B4EF3A2E88DC38 /* ef */ = {
+			isa = PBXGroup;
+			children = (
+				D2AF037313E4E11096975ED3 /* 09abfdebced44a15a3a299a268813905daeeaf */,
+			);
+			path = ef;
+			sourceTree = "<group>";
+		};
+		3722F2BBF7975C0E20DBE774 /* 07 */ = {
+			isa = PBXGroup;
+			children = (
+				5434A9A0EAA214A3B5408111 /* ff4d76dff7bc152919d460ea412dc93c7b754e */,
+			);
+			path = 07;
+			sourceTree = "<group>";
+		};
+		3DBDC6BE4BD462564A2C4F15 /* hooks */ = {
+			isa = PBXGroup;
+			children = (
+				9DCDCDEAE2591732113E479A /* applypatch-msg.sample */,
+				F2678B04F5CF8D2BD6325BEA /* commit-msg.sample */,
+				0C3809023BC25C55D95B5080 /* fsmonitor-watchman.sample */,
+				0A78D116C5F3EE0A8E570A84 /* post-update.sample */,
+				FE5F503C94E27E801F32982C /* pre-applypatch.sample */,
+				7B1ADB4F55FB6AEE388DB8C7 /* pre-commit.sample */,
+				E40A9D5533EB0DBA51779FCB /* pre-merge-commit.sample */,
+				32233626E306B61AD00E5B45 /* pre-push.sample */,
+				0FFC7C599BC87D6E2A44FE7E /* pre-rebase.sample */,
+				54DF6CA5668CFD542B861D31 /* pre-receive.sample */,
+				EF19B1A8E34A2C7591C3386C /* prepare-commit-msg.sample */,
+				B4735A10775AB698661F348A /* push-to-checkout.sample */,
+				C04213E05A9881AD8FBE743A /* update.sample */,
+			);
+			path = hooks;
+			sourceTree = "<group>";
+		};
+		3E6761B158C3FB76EDF70ED4 /* bf */ = {
+			isa = PBXGroup;
+			children = (
+				B4F5BD84254D17E40BDC3E6E /* 025dfa3dc607a666b06e63a1619f3e4bab974b */,
+			);
+			path = bf;
+			sourceTree = "<group>";
+		};
+		401041EA5758660D571C3AAA /* 36 */ = {
+			isa = PBXGroup;
+			children = (
+				954CC5858CEACBD3397D63E8 /* a7178e8d40f87f8e388a010d3105b5f6b3c485 */,
+			);
+			path = 36;
+			sourceTree = "<group>";
+		};
+		4214ED80FC2F20CEF9B1E7B3 /* .git */ = {
+			isa = PBXGroup;
+			children = (
+				4DE755014CAE9D9A7F52F825 /* COMMIT_EDITMSG */,
+				F6DDC735681057370690F493 /* config */,
+				39CDC994452356B91B861EDB /* description */,
+				D454EFBEA1E9F878F391E270 /* HEAD */,
+				97BFB7B5FC98B8AC259ABF2B /* index */,
+				3DBDC6BE4BD462564A2C4F15 /* hooks */,
+				8E931B498E9FD8E1BD538D8A /* info */,
+				8E442726F6F685F785AC9C37 /* logs */,
+				500BECFC9FE9CEC3D4B33CD8 /* objects */,
+				70C8C3A05F8A4159E5D1EA52 /* refs */,
+			);
+			path = .git;
+			sourceTree = "<group>";
+		};
+		4B641FBC7354B656118B2AE2 /* 6f */ = {
+			isa = PBXGroup;
+			children = (
+				D977CA25C0C887A210FA2EE7 /* 301728f2db8f949b81c6b11fcf03c78b7e710f */,
+			);
+			path = 6f;
+			sourceTree = "<group>";
+		};
+		500BECFC9FE9CEC3D4B33CD8 /* objects */ = {
+			isa = PBXGroup;
+			children = (
+				AEBDEFD6687BA175550CF455 /* 03 */,
+				FF2842F9DE4C3ECEA262BE5A /* 3b */,
+				1CCEE09FE0853D7F4E4B2405 /* 04 */,
+				7D58676262FDF5ECE0330DAF /* 4b */,
+				F4A51108E6D09A7C892E9B74 /* 4d */,
+				5EE46BFDA541EE871210747E /* 6e */,
+				4B641FBC7354B656118B2AE2 /* 6f */,
+				3722F2BBF7975C0E20DBE774 /* 07 */,
+				212ED4625A08788E80B6BE5B /* 08 */,
+				E85CE4D47E88104796A4D778 /* 9d */,
+				BDB94E5392818818B1F561AE /* 13 */,
+				BF60BC63C4FB6B45F28BE7A8 /* 19 */,
+				1328599D51AC880BCA870803 /* 22 */,
+				401041EA5758660D571C3AAA /* 36 */,
+				53BB421C6B6932F5677B7558 /* 42 */,
+				2B0B18DAEB04A0D617E03648 /* 43 */,
+				DDE760B2E64F4F079E2EB907 /* 46 */,
+				E2D27346BE130C9BC992FE9E /* 47 */,
+				BC70E62E228765835C3F97CB /* 48 */,
+				BCD321D0CEC84E78E454A901 /* 54 */,
+				1A36D0721C1677600919035C /* 55 */,
+				C1724F79F7D8880FE00FBCA7 /* 81 */,
+				9626EED203FA0002F25DAC56 /* 91 */,
+				A82F2139D98EC87AACCE2FD9 /* 99 */,
+				090AFA6C6CCDB323C7CB88A7 /* a2 */,
+				E976FFDC6B2A712FB2EC8EC2 /* a6 */,
+				96B34C7276776F5A6A945E5D /* b2 */,
+				AB355B574C58DE83C1E01FDF /* b6 */,
+				0FAF05101815D4078B34881A /* b8 */,
+				3E6761B158C3FB76EDF70ED4 /* bf */,
+				EDE397C390587819C50ADC6A /* cb */,
+				FC84224D08F326D7A0039B4D /* d0 */,
+				9BD7D41D478E5AF2A6F23AEE /* d1 */,
+				CA3C5EF6560214CEC54696EF /* de */,
+				2790027AFA3A092434AE6E78 /* df */,
+				301AE97AF7B4EF3A2E88DC38 /* ef */,
+				0975A5F35CE82CFF9EB7238E /* f4 */,
+				0F4019C33A5E40FFB68A9D4F /* fd */,
+			);
+			path = objects;
+			sourceTree = "<group>";
+		};
+		53BB421C6B6932F5677B7558 /* 42 */ = {
+			isa = PBXGroup;
+			children = (
+				A8F2CF834E2E8CDD83F23AC1 /* 4a1a157bee341521e16d1ceaf39af80858ec97 */,
+			);
+			path = 42;
+			sourceTree = "<group>";
+		};
+		5C34CE8865DC270BF88F16A2 /* heads */ = {
+			isa = PBXGroup;
+			children = (
+				FF41341530E69BE4A2D68874 /* main */,
+			);
+			path = heads;
+			sourceTree = "<group>";
+		};
+		5EE46BFDA541EE871210747E /* 6e */ = {
+			isa = PBXGroup;
+			children = (
+				4543F4CDA6D2F65AC07DBEC8 /* ab2d4ed62f0318b679137281bb76140a15f101 */,
+			);
+			path = 6e;
+			sourceTree = "<group>";
+		};
+		70C8C3A05F8A4159E5D1EA52 /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				5C34CE8865DC270BF88F16A2 /* heads */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		7186F5C5A59B7EDEA5576719 /* heads */ = {
+			isa = PBXGroup;
+			children = (
+				9A9DC4B322383D016DBFD891 /* main */,
+			);
+			path = heads;
+			sourceTree = "<group>";
+		};
+		7D58676262FDF5ECE0330DAF /* 4b */ = {
+			isa = PBXGroup;
+			children = (
+				551BF831CBECC92FDA42E941 /* 36b54b276f9e2aecc28c6d257543c57839f081 */,
+			);
+			path = 4b;
+			sourceTree = "<group>";
+		};
+		8E442726F6F685F785AC9C37 /* logs */ = {
+			isa = PBXGroup;
+			children = (
+				154E375B7B7A6522D17D9E33 /* HEAD */,
+				EBEDDACFF5FFA1A8BA43595B /* refs */,
+			);
+			path = logs;
+			sourceTree = "<group>";
+		};
+		8E931B498E9FD8E1BD538D8A /* info */ = {
+			isa = PBXGroup;
+			children = (
+				9C48ACBDDB0D44B125588B26 /* exclude */,
+			);
+			path = info;
+			sourceTree = "<group>";
+		};
+		90644A4ACD8C51B2BBF3D6A4 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				2F8C77B26C7D00A67A7F5720 /* AppModels.swift */,
+				9C2249380C1CD83C555D3F6F /* AppStore.swift */,
+				25782B6957A86E0AFA519E75 /* RepositoryModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		929FA9B43265D6333B8FA3CA /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				BABC55CD09B6DF204CB25F52 /* Components.swift */,
+				EF1A85346BAAD8DB80FF65C1 /* DiffView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		936A06FDF360DD3D0A894EBD /* Branches */ = {
+			isa = PBXGroup;
+			children = (
+				3246A422A020A2AA140EB92E /* BranchesView.swift */,
+			);
+			path = Branches;
+			sourceTree = "<group>";
+		};
+		9626EED203FA0002F25DAC56 /* 91 */ = {
+			isa = PBXGroup;
+			children = (
+				04C4D3CDE5EF29EF0C06F40D /* f9c4ef00fdb610fc0dadab159f4f15fc4413fc */,
+			);
+			path = 91;
+			sourceTree = "<group>";
+		};
+		96B34C7276776F5A6A945E5D /* b2 */ = {
+			isa = PBXGroup;
+			children = (
+				0F16418DCEFCDB7A284EFC9C /* 5898c8324049694e065c8fb6b8649439b75923 */,
+			);
+			path = b2;
+			sourceTree = "<group>";
+		};
+		9BD7D41D478E5AF2A6F23AEE /* d1 */ = {
+			isa = PBXGroup;
+			children = (
+				D7F83D2F5E568C4AFC87DC1D /* bdd002ac43cfe26b82afe29bbd987ce3d234bd */,
+			);
+			path = d1;
+			sourceTree = "<group>";
+		};
+		9E54CEA0483FD0911A879665 /* Sheets */ = {
+			isa = PBXGroup;
+			children = (
+				6A0491A14E5F4CC565658AC0 /* RepositorySheets.swift */,
+				022AF7F3BD1C70C7C6DAA265 /* SSHUnlockSheet.swift */,
+			);
+			path = Sheets;
+			sourceTree = "<group>";
+		};
+		A19FC2779B26A9CE9D2AE4C4 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				9DF3A26D6D31B36538BFA922 /* HistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		A412B3096BCD5211597E6728 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				D49326877964FB96B73AA1A5 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		A5F35EF3FD2847DCD5EE2704 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				61A0BD53FFB494757CD42D6D /* Keychain.swift */,
+				DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A5FCDC91F1C9FB6367596C08 /* MacGit */ = {
+			isa = PBXGroup;
+			children = (
+				8C7209449385B3CB2FDF3B8B /* Assets.xcassets */,
+				71EBF7BE8BB506D3C840704A /* Info.plist */,
+				F9638D5A86F94A223D6C2DEA /* MacGit.entitlements */,
+				4214ED80FC2F20CEF9B1E7B3 /* .git */,
+				B78BA0138057FD1A37B4DEEE /* App */,
+				90644A4ACD8C51B2BBF3D6A4 /* Model */,
+				A5F35EF3FD2847DCD5EE2704 /* Services */,
+				BB899C756DEBD6F9E717858D /* Views */,
+			);
+			path = MacGit;
+			sourceTree = "<group>";
+		};
+		A82F2139D98EC87AACCE2FD9 /* 99 */ = {
+			isa = PBXGroup;
+			children = (
+				CB9517D65F65F12FB42826DD /* 7fdb9ae6daffa8f8a9ea4881c9918a7c8b418b */,
+			);
+			path = 99;
+			sourceTree = "<group>";
+		};
+		A88DFC9C9A6245E7201485FB /* ProjectSettings */ = {
+			isa = PBXGroup;
+			children = (
+				DF95FDFB1BE82B1455AE9509 /* AuthEditor.swift */,
+				E016C22ECB77815B01BE631E /* ProjectSettingsView.swift */,
+			);
+			path = ProjectSettings;
+			sourceTree = "<group>";
+		};
+		AB355B574C58DE83C1E01FDF /* b6 */ = {
+			isa = PBXGroup;
+			children = (
+				7E6966ADC3918940E6474CC3 /* 66f8d0d941af154ca19547308ef3290683fe68 */,
+			);
+			path = b6;
+			sourceTree = "<group>";
+		};
+		AEBDEFD6687BA175550CF455 /* 03 */ = {
+			isa = PBXGroup;
+			children = (
+				324382165F60A37532CDF699 /* 743931d0bc979f6b6cbe30ab49121dadef6203 */,
+			);
+			path = 03;
+			sourceTree = "<group>";
+		};
+		AEC0EEE1964911DEC54BC3DA = {
+			isa = PBXGroup;
+			children = (
+				A5FCDC91F1C9FB6367596C08 /* MacGit */,
+				C4E627DA62F9ED2E38A02856 /* Packages */,
+				C7E3B071B70E62CFDFD5D8C1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B78BA0138057FD1A37B4DEEE /* App */ = {
+			isa = PBXGroup;
+			children = (
+				1278DA0A41DBADE72C5DE6E7 /* MacGitApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		BB899C756DEBD6F9E717858D /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F468A9B52659B12DD45D6A26 /* RepositoryView.swift */,
+				BA72394C6ACE1CF3160AD101 /* RootView.swift */,
+				936A06FDF360DD3D0A894EBD /* Branches */,
+				929FA9B43265D6333B8FA3CA /* Components */,
+				A19FC2779B26A9CE9D2AE4C4 /* History */,
+				02FA34364C5492BA29F3C244 /* Changes */,
+				A88DFC9C9A6245E7201485FB /* ProjectSettings */,
+				A412B3096BCD5211597E6728 /* Settings */,
+				9E54CEA0483FD0911A879665 /* Sheets */,
+				1B405DFD5B541AF8D73789D8 /* Shelf */,
+				CC16B7CC81B22A64A5A334A0 /* Sidebar */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		BC70E62E228765835C3F97CB /* 48 */ = {
+			isa = PBXGroup;
+			children = (
+				1C860E4DD1A71B9EFBC7A827 /* 20191e8de3eaf66498cb2939b7f8f4fb4f6f5a */,
+			);
+			path = 48;
+			sourceTree = "<group>";
+		};
+		BCD321D0CEC84E78E454A901 /* 54 */ = {
+			isa = PBXGroup;
+			children = (
+				65927DEBA5118A9B8F9A2279 /* e8918f0488783846aeb87d27ed91b87cb5162d */,
+			);
+			path = 54;
+			sourceTree = "<group>";
+		};
+		BDB94E5392818818B1F561AE /* 13 */ = {
+			isa = PBXGroup;
+			children = (
+				422DBB18A6674B9543BFF962 /* 3a84923c61646a138f3a487eeec65671732da5 */,
+			);
+			path = 13;
+			sourceTree = "<group>";
+		};
+		BF60BC63C4FB6B45F28BE7A8 /* 19 */ = {
+			isa = PBXGroup;
+			children = (
+				A58389F1CB5D61394A9AAEF2 /* d494eb6e6f79bbb05259b84e75637dd1534b3d */,
+			);
+			path = 19;
+			sourceTree = "<group>";
+		};
+		C1724F79F7D8880FE00FBCA7 /* 81 */ = {
+			isa = PBXGroup;
+			children = (
+				9D51E93819BC628E1FE9929B /* 3b682c77bdc4809c5a0253857575a7bdc08761 */,
+				F672D60B5693D2DC4D2A3BC9 /* 626791139e47f5b5628e0148631730ee23214b */,
+			);
+			path = 81;
+			sourceTree = "<group>";
+		};
+		C4E627DA62F9ED2E38A02856 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				7EE2BA5891FF9B9C72E531BD /* GitKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		C7E3B071B70E62CFDFD5D8C1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8BCD092AF3337856C5088BA5 /* MacGit.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CA3C5EF6560214CEC54696EF /* de */ = {
+			isa = PBXGroup;
+			children = (
+				9741A74F41E666DCDA948A38 /* e1a62cdc26f538e928ed7933b2077d5ba69277 */,
+			);
+			path = de;
+			sourceTree = "<group>";
+		};
+		CC16B7CC81B22A64A5A334A0 /* Sidebar */ = {
+			isa = PBXGroup;
+			children = (
+				EB200A52A61FED870B3C0EBE /* SidebarView.swift */,
+			);
+			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		DDE760B2E64F4F079E2EB907 /* 46 */ = {
+			isa = PBXGroup;
+			children = (
+				0FD44371C2EE9786EF2D97FB /* cba7dff03f1ab04c920fb8f00e73588f5e5aa2 */,
+				5F2A3D92F6BCCCB76560CA4F /* f3b9132540cfb4f9ef88062ea92e962468959f */,
+			);
+			path = 46;
+			sourceTree = "<group>";
+		};
+		E2D27346BE130C9BC992FE9E /* 47 */ = {
+			isa = PBXGroup;
+			children = (
+				F26B2D53F7B6E039007D38B9 /* c030db6fac869dcbb31b10a81134359b7175c4 */,
+			);
+			path = 47;
+			sourceTree = "<group>";
+		};
+		E85CE4D47E88104796A4D778 /* 9d */ = {
+			isa = PBXGroup;
+			children = (
+				60B961887FB68468F19C595C /* 01982ce60fb924910adc4a3cde27282f77337b */,
+			);
+			path = 9d;
+			sourceTree = "<group>";
+		};
+		E976FFDC6B2A712FB2EC8EC2 /* a6 */ = {
+			isa = PBXGroup;
+			children = (
+				50AA60C932575E5FB322ECAA /* e2eecd67f2b8271ba8c1e8d00eb44c4c91285a */,
+			);
+			path = a6;
+			sourceTree = "<group>";
+		};
+		EBEDDACFF5FFA1A8BA43595B /* refs */ = {
+			isa = PBXGroup;
+			children = (
+				7186F5C5A59B7EDEA5576719 /* heads */,
+			);
+			path = refs;
+			sourceTree = "<group>";
+		};
+		EDE397C390587819C50ADC6A /* cb */ = {
+			isa = PBXGroup;
+			children = (
+				BF9B92FFF15BA3ED97FAD7B2 /* 720840fa1eeb042075667a59e346ef21de25b2 */,
+			);
+			path = cb;
+			sourceTree = "<group>";
+		};
+		F4A51108E6D09A7C892E9B74 /* 4d */ = {
+			isa = PBXGroup;
+			children = (
+				E7E7109D7400AF1FE3EE28B8 /* 14f7e76fbae77e4d2d896a7428a54f3aeaf24d */,
+			);
+			path = 4d;
+			sourceTree = "<group>";
+		};
+		FC84224D08F326D7A0039B4D /* d0 */ = {
+			isa = PBXGroup;
+			children = (
+				154495A657F7DFC07B5D006E /* db2b38813ca19c0ceae3df6d8611b6b1ec880c */,
+			);
+			path = d0;
+			sourceTree = "<group>";
+		};
+		FF2842F9DE4C3ECEA262BE5A /* 3b */ = {
+			isa = PBXGroup;
+			children = (
+				B2F8680539F985929A7F5E98 /* 36039633412d5049c10dc679f0c8313aaac215 */,
+			);
+			path = 3b;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1EA14E3F614A0A9454D67AC8 /* MacGit */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 93434EA5F3066E4815BF6934 /* Build configuration list for PBXNativeTarget "MacGit" */;
+			buildPhases = (
+				443828951112270D67D62EF8 /* Sources */,
+				B692AD8E22AD8C59944ED461 /* Resources */,
+				48EE5D51711A7521C2C83FD2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacGit;
+			packageProductDependencies = (
+				BBAD4A27BE81CBD6F66E2F7A /* GitKit */,
+			);
+			productName = MacGit;
+			productReference = 8BCD092AF3337856C5088BA5 /* MacGit.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F1DD9ED3321E00AA6322719B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					1EA14E3F614A0A9454D67AC8 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 54C0B1CA4F52291B901ECDCA /* Build configuration list for PBXProject "MacGit" */;
+			developmentRegion = cs;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				cs,
+			);
+			mainGroup = AEC0EEE1964911DEC54BC3DA;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				55C52387C3AB54BC9146ABD6 /* XCLocalSwiftPackageReference "Packages/GitKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C7E3B071B70E62CFDFD5D8C1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1EA14E3F614A0A9454D67AC8 /* MacGit */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B692AD8E22AD8C59944ED461 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EBBE51B4FF415B1C72223CEC /* Assets.xcassets in Resources */,
+				CD803DA24FBD5BED664AD376 /* applypatch-msg.sample in Resources */,
+				E9B4CE18314E7AFCC879139A /* commit-msg.sample in Resources */,
+				4F045A6B496D8422E304468F /* fsmonitor-watchman.sample in Resources */,
+				EF69F339C9DDF16E245B5AED /* post-update.sample in Resources */,
+				9F5674D1C1DC19C792A0C824 /* pre-applypatch.sample in Resources */,
+				A263FFD6D9874DC462E5D765 /* pre-commit.sample in Resources */,
+				29A359EC327FB1D3AB01DD31 /* pre-merge-commit.sample in Resources */,
+				F323CA101B21E2B58EC4D499 /* pre-push.sample in Resources */,
+				10EFA5068D241B5B481FB5F8 /* pre-rebase.sample in Resources */,
+				E51615D6BF2BFD3F923C785C /* pre-receive.sample in Resources */,
+				3C8F85A4C51F5BCAB536E089 /* prepare-commit-msg.sample in Resources */,
+				0765B74A081BD2A06B674A80 /* push-to-checkout.sample in Resources */,
+				E95D58687739B9A4CC065116 /* update.sample in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		443828951112270D67D62EF8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C5D237FFF5C0D9EC57F09A9 /* AppModels.swift in Sources */,
+				487F80338F1603CFA9AA0C0F /* AppStore.swift in Sources */,
+				660C7936A146D4437F641A4A /* AuthEditor.swift in Sources */,
+				528422AB4950163B81B85334 /* BranchesView.swift in Sources */,
+				2A16C985B9CE599F1DA20F4D /* ChangesView.swift in Sources */,
+				60B6C4FBD5B8F51743861149 /* CommitPanel.swift in Sources */,
+				80219AF6FFFE6AE57F732ED7 /* Components.swift in Sources */,
+				F82419B7644EC6038E00C2FE /* DiffView.swift in Sources */,
+				FC03260CC8B3F614FA44FC24 /* HistoryView.swift in Sources */,
+				07DBD51DE024AFCCF79EC0B3 /* Keychain.swift in Sources */,
+				9B439EDCD873840961860722 /* MacGitApp.swift in Sources */,
+				73462F6E9EE35845C12F802C /* ProjectSettingsView.swift in Sources */,
+				DFE6A650A99B10B31E3F2299 /* RepositoryModel.swift in Sources */,
+				8DCD29DE08052C328DCB051B /* RepositorySheets.swift in Sources */,
+				4F1A831303E04BB285B48F82 /* RepositoryView.swift in Sources */,
+				8B27DC5AF88C7D4A53C0ABD6 /* RepositoryWatcher.swift in Sources */,
+				A8275B9B9C5BB06F5DCFD6DE /* RootView.swift in Sources */,
+				9025144D8E2F254D8AB892DF /* SSHUnlockSheet.swift in Sources */,
+				972C69BE48FA358F73A19697 /* SettingsView.swift in Sources */,
+				C23DC8B3FD660D82D0D582C5 /* ShelfView.swift in Sources */,
+				EC03477520C1D05BBEC8FBB9 /* SidebarView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3591566F147EE56924CC9426 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		97E3D776D4C02B6E03CB60C8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MacGit/MacGit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = MacGit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = cz.svetik.MacGit;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		CE26D1133489CA27DC511167 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		FA31C0F5CEACAFCA3E333195 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = MacGit/MacGit.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = MacGit/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = cz.svetik.MacGit;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		54C0B1CA4F52291B901ECDCA /* Build configuration list for PBXProject "MacGit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3591566F147EE56924CC9426 /* Debug */,
+				CE26D1133489CA27DC511167 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		93434EA5F3066E4815BF6934 /* Build configuration list for PBXNativeTarget "MacGit" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				97E3D776D4C02B6E03CB60C8 /* Debug */,
+				FA31C0F5CEACAFCA3E333195 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		55C52387C3AB54BC9146ABD6 /* XCLocalSwiftPackageReference "Packages/GitKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/GitKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BBAD4A27BE81CBD6F66E2F7A /* GitKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = GitKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F1DD9ED3321E00AA6322719B /* Project object */;
+}

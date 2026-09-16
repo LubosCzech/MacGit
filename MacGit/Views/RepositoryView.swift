@@ -33,6 +33,9 @@ struct RepositoryView: View {
                 Text(model.errorMessage ?? "")
             }
             .textPrompt($branchPrompt)
+            .sheet(item: $model.sshUnlockRequest) { request in
+                SSHUnlockSheet(model: model, request: request)
+            }
             .onAppear { model.activate() }
             .onChange(of: model.section) { _, section in
                 if section == .history { Task { await model.loadHistory() } }

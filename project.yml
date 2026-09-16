@@ -1,0 +1,60 @@
+name: MacGit
+options:
+  bundleIdPrefix: cz.svetik
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: cs
+packages:
+  GitKit:
+    path: Packages/GitKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  MacGit:
+    type: application
+    platform: macOS
+    sources:
+      - path: MacGit
+    dependencies:
+      - package: GitKit
+    info:
+      path: MacGit/Info.plist
+      properties:
+        CFBundleDisplayName: MacGit
+        CFBundleDevelopmentRegion: cs
+        CFBundleLocalizations: [cs]
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHumanReadableCopyright: "© 2026 Luboš Světík"
+    entitlements:
+      path: MacGit/MacGit.entitlements
+      properties:
+        # Git klient spouští git, ssh a gpg – sandbox by to znemožnil.
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: cz.svetik.MacGit
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+schemes:
+  MacGit:
+    build:
+      targets:
+        MacGit: all
+    run:
+      config: Debug
+    test:
+      targets:
+        - package: GitKit/GitKitTests

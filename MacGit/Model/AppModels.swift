@@ -125,3 +125,10 @@ struct ProjectWorkspace: Codable {
     /// Soubory z neaktivních changelistů, které uživatel zaškrtl.
     var includedPaths: Set<String> = []
 }
+
+struct SSHUnlockRequest: Identifiable {
+    let id = UUID()
+    var message: String
+    var suggestedKeyPath: String?
+    var retry: () async -> Void
+}
