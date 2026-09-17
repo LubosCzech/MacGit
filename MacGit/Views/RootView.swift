@@ -23,7 +23,7 @@ struct RootView: View {
                     WelcomeView()
                         .stableColumnSize()
                 }
-                .navigationTitle("MacGit")
+                .navigationTitle("Revision")
             }
         }
         .sheet(item: $store.presentedSheet) { kind in
@@ -130,7 +130,10 @@ struct WelcomeView: View {
                 .accessibilityHidden(true)
 
             VStack(spacing: 6) {
-                Text("MacGit").font(.largeTitle.weight(.semibold))
+                Text("Revision").font(.largeTitle.weight(.semibold))
+                Text("See changes. Build with confidence.")
+                    .font(.title3)
+                    .foregroundStyle(Brand.primaryBlue)
                 Text(store.projects.isEmpty ? "Přidej první repozitář a roztřiď ho do prostoru." : "Vyber repozitář v postranním panelu.")
                     .foregroundStyle(.secondary)
             }

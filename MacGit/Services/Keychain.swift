@@ -3,7 +3,9 @@ import Security
 
 /// Tenká vrstva nad Klíčenkou – generická hesla pod službou aplikace.
 enum Keychain {
-    private static let service = "cz.svetik.MacGit"
+    private static let service = "cz.svetik.Revision"
+    /// Služba z doby, kdy se aplikace jmenovala MacGit – čte se, dokud se údaj nepřeuloží.
+    private static let legacyService = "cz.svetik.MacGit"
 
     static func set(_ value: String?, for key: String) {
         let query: [String: Any] = [
@@ -20,6 +22,14 @@ enum Keychain {
     }
 
     static func get(_ key: String) -> String? {
+        if let value = value(for: key, service: service) { return value }
+        // Migrace: co je uložené pod starým jménem, přeneseme do nové služby.
+        guard let legacy = value(for: key, service: legacyService) else { return nil }
+        set(legacy, for: key)
+        return legacy
+    }
+
+    private static func value(for key: String, service: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

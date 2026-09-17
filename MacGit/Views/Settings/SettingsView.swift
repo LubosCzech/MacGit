@@ -265,8 +265,8 @@ private struct AddAccountSheet: View {
 
     private var tokenURL: URL? {
         switch kind {
-        case .github: URL(string: "https://\(effectiveHost)/settings/tokens/new?scopes=repo,read:user,user:email,write:public_key&description=MacGit")
-        case .gitlab: URL(string: "https://\(effectiveHost)/-/user_settings/personal_access_tokens?name=MacGit&scopes=api,read_user,read_repository,write_repository")
+        case .github: URL(string: "https://\(effectiveHost)/settings/tokens/new?scopes=repo,read:user,user:email,write:public_key&description=Revision")
+        case .gitlab: URL(string: "https://\(effectiveHost)/-/user_settings/personal_access_tokens?name=Revision&scopes=api,read_user,read_repository,write_repository")
         }
     }
 
@@ -357,7 +357,7 @@ private struct SSHKeysSettings: View {
     private func upload(_ key: SSHKey, to account: HostingAccount, purpose: HostingClient.SSHKeyPurpose) async {
         guard let client = store.client(for: account) else { return }
         do {
-            try await client.uploadSSHKey(title: "MacGit – \(Host.current().localizedName ?? "Mac")", publicKey: key.publicKey, purpose: purpose)
+            try await client.uploadSSHKey(title: "Revision – \(Host.current().localizedName ?? "Mac")", publicKey: key.publicKey, purpose: purpose)
             message = purpose == .signing ? "Podpisový klíč nahrán na \(account.host)." : "Klíč nahrán na \(account.host)."
         } catch {
             message = error.localizedDescription

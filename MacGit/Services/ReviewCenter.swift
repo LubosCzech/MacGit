@@ -16,13 +16,13 @@ final class ReviewCenter {
     /// Výstupy review – Caches, systém je smí při nedostatku místa smazat.
     let outputDirectory: URL = {
         let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        let url = caches.appendingPathComponent("cz.svetik.MacGit/Reviews", isDirectory: true)
+        let url = caches.appendingPathComponent("cz.svetik.Revision/Reviews", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }()
 
     /// Dočasné pracovní kopie větví.
-    let worktreeDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("MacGit-reviews", isDirectory: true)
+    let worktreeDirectory = FileManager.default.temporaryDirectory.appendingPathComponent("Revision-reviews", isDirectory: true)
 
     init(store: AppStore) {
         self.store = store

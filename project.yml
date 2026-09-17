@@ -1,4 +1,4 @@
-name: MacGit
+name: Revision
 options:
   bundleIdPrefix: cz.svetik
   deploymentTarget:
@@ -20,7 +20,7 @@ settings:
     SWIFT_APPROACHABLE_CONCURRENCY: YES
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 targets:
-  MacGit:
+  Revision:
     type: application
     platform: macOS
     sources:
@@ -30,7 +30,7 @@ targets:
     info:
       path: MacGit/Info.plist
       properties:
-        CFBundleDisplayName: MacGit
+        CFBundleDisplayName: Revision
         CFBundleDevelopmentRegion: cs
         CFBundleLocalizations: [cs]
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
@@ -45,14 +45,15 @@ targets:
         com.apple.security.network.client: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: cz.svetik.MacGit
+        PRODUCT_BUNDLE_IDENTIFIER: cz.svetik.Revision
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
 schemes:
-  MacGit:
+  Revision:
     build:
       targets:
-        MacGit: all
+        Revision: all
     run:
       config: Debug
     test:

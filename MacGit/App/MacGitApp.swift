@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct MacGitApp: App {
+struct RevisionApp: App {
     @State private var store = AppStore()
 
     var body: some Scene {
-        WindowGroup("MacGit", id: "main") {
+        WindowGroup("Revision", id: "main") {
             RootView()
                 .environment(store)
                 .frame(minWidth: 980, minHeight: 600)
@@ -15,7 +15,7 @@ struct MacGitApp: App {
         }
         .defaultSize(width: 1440, height: 900)
         .windowToolbarStyle(.unified)
-        .commands { MacGitCommands(store: store) }
+        .commands { RevisionCommands(store: store) }
 
         WindowGroup("AI review", id: "review", for: ReviewWindowValue.self) { $value in
             ReviewWindow(value: value)
@@ -31,7 +31,7 @@ struct MacGitApp: App {
 }
 
 /// Každá akce z toolbaru má i položku v menu (HIG).
-struct MacGitCommands: Commands {
+struct RevisionCommands: Commands {
     let store: AppStore
     @FocusedValue(\.repositoryModel) private var model
     @AppStorage("changesAsTree") private var changesAsTree = false

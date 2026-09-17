@@ -51,7 +51,9 @@ final class AppStore {
 
     init() {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        supportURL = base.appendingPathComponent("MacGit", isDirectory: true)
+        supportURL = base.appendingPathComponent("Revision", isDirectory: true)
+        AppMigration.moveLegacySupportDirectory(from: base.appendingPathComponent("MacGit", isDirectory: true), to: supportURL)
+        AppMigration.copyLegacyDefaults()
         askpassPath = supportURL.appendingPathComponent("askpass.sh").path
         try? FileManager.default.createDirectory(at: supportURL.appendingPathComponent("workspaces"), withIntermediateDirectories: true)
         installAskpass()

@@ -3,11 +3,16 @@ import SwiftUI
 import GitKit
 
 enum SpaceColor: String, Codable, CaseIterable, Identifiable {
+    case brand, cobalt, indigo, cyan
     case blue, purple, pink, red, orange, yellow, green, teal, gray
     var id: String { rawValue }
 
     var color: Color {
         switch self {
+        case .brand: Brand.primaryBlue
+        case .cobalt: Brand.cobalt
+        case .indigo: Brand.indigo
+        case .cyan: Brand.cyanAccent
         case .blue: .blue
         case .purple: .purple
         case .pink: .pink
@@ -29,7 +34,7 @@ struct Space: Identifiable, Codable, Hashable {
     var color: SpaceColor
 
     static func new() -> Space {
-        Space(name: "", symbol: suggestedSymbols.randomElement()!, color: SpaceColor.allCases.randomElement()!)
+        Space(name: "", symbol: suggestedSymbols.randomElement()!, color: .brand)
     }
 
     static let suggestedSymbols = [

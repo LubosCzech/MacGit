@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1EA14E3F614A0A9454D67AC8"
-               BuildableName = "MacGit.app"
-               BlueprintName = "MacGit"
-               ReferencedContainer = "container:MacGit.xcodeproj">
+               BlueprintIdentifier = "F0F7339962E92DA940ADBF8A"
+               BuildableName = "Revision.app"
+               BlueprintName = "Revision"
+               ReferencedContainer = "container:Revision.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EA14E3F614A0A9454D67AC8"
-            BuildableName = "MacGit.app"
-            BlueprintName = "MacGit"
-            ReferencedContainer = "container:MacGit.xcodeproj">
+            BlueprintIdentifier = "F0F7339962E92DA940ADBF8A"
+            BuildableName = "Revision.app"
+            BlueprintName = "Revision"
+            ReferencedContainer = "container:Revision.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -68,10 +68,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EA14E3F614A0A9454D67AC8"
-            BuildableName = "MacGit.app"
-            BlueprintName = "MacGit"
-            ReferencedContainer = "container:MacGit.xcodeproj">
+            BlueprintIdentifier = "F0F7339962E92DA940ADBF8A"
+            BuildableName = "Revision.app"
+            BlueprintName = "Revision"
+            ReferencedContainer = "container:Revision.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -87,10 +87,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "1EA14E3F614A0A9454D67AC8"
-            BuildableName = "MacGit.app"
-            BlueprintName = "MacGit"
-            ReferencedContainer = "container:MacGit.xcodeproj">
+            BlueprintIdentifier = "F0F7339962E92DA940ADBF8A"
+            BuildableName = "Revision.app"
+            BlueprintName = "Revision"
+            ReferencedContainer = "container:Revision.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

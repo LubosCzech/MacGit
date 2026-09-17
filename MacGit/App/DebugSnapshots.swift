@@ -2,7 +2,7 @@
 import AppKit
 import SwiftUI
 
-/// Ladicí režim: `MacGit --snapshots <složka>` uloží snímky okna pro všechny sekce (funguje i při zamčené obrazovce).
+/// Ladicí režim: `Revision --snapshots <složka>` uloží snímky okna pro všechny sekce (funguje i při zamčené obrazovce).
 @MainActor
 enum DebugSnapshots {
     static func runIfRequested(store: AppStore) {
