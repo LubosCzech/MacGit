@@ -35,6 +35,21 @@ public enum SSHKeyManager {
         }
     }
 
+    /// Obsah souboru `allowed_signers` pro ověřování SSH podpisů commitů.
+    /// Každý klíč je důvěryhodný pro všechny zadané identity (e-maily).
+    public static func allowedSigners(emails: [String], publicKeys: [String]) -> String {
+        let principals = Array(Set(emails.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && !$0.contains(" ") })).sorted()
+        guard !principals.isEmpty else { return "" }
+        return publicKeys.map { key -> String in
+            // Veřejný klíč: "typ base64 [komentář]" – komentář do allowed_signers nepatří.
+            let parts = key.trimmingCharacters(in: .whitespacesAndNewlines).split(separator: " ")
+            guard parts.count >= 2 else { return "" }
+            return "\(principals.joined(separator: ",")) namespaces=\"git\" \(parts[0]) \(parts[1])"
+        }
+        .filter { !$0.isEmpty }
+        .joined(separator: "\n") + "\n"
+    }
+
     /// Je privátní klíč chráněný passphrase?
     public static func isEncrypted(_ privateKeyPath: String) async -> Bool {
         let result = try? await run("/usr/bin/ssh-keygen", ["-y", "-P", "", "-f", privateKeyPath])

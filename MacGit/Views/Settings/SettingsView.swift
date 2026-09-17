@@ -51,9 +51,7 @@ private struct SpacesSettings: View {
                         }
                         Spacer()
                         Button("Upravit") { editing = space }
-                            .buttonStyle(.glass)
                         Button(role: .destructive) { spaceToDelete = space } label: { Image(systemName: "trash") }
-                            .buttonStyle(.glass)
                     }
                     .padding(.vertical, 4)
                 }
@@ -67,7 +65,7 @@ private struct SpacesSettings: View {
                 Button("Nový prostor", systemImage: "plus") {
                     editing = Space(name: "", symbol: Space.suggestedSymbols.randomElement()!, color: SpaceColor.allCases.randomElement()!)
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
             }
             .padding(14)
         }
@@ -88,7 +86,7 @@ private struct SpacesSettings: View {
     }
 }
 
-private struct SpaceEditor: View {
+struct SpaceEditor: View {
     @State var space: Space
     let onSave: (Space) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -120,7 +118,7 @@ private struct SpaceEditor: View {
                                 .padding(4)
                         }
                         .buttonStyle(.plain)
-                        .glassEffect(.regular.interactive(), in: .circle)
+                        .overlay(Circle().strokeBorder(.separator))
                     }
                 }
             }
@@ -142,12 +140,12 @@ private struct SpaceEditor: View {
 
             HStack {
                 Spacer()
-                Button("Zrušit") { dismiss() }.buttonStyle(.glass)
+                Button("Zrušit") { dismiss() }
                 Button("Uložit") {
                     onSave(space)
                     dismiss()
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(space.name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
@@ -175,7 +173,7 @@ private struct AccountsSettings: View {
                         Image(systemName: account.kind.symbol)
                             .foregroundStyle(account.kind.tint)
                             .frame(width: 34, height: 34)
-                            .glassEffect(.regular, in: .circle)
+                            .background(.quaternary, in: .circle)
                         VStack(alignment: .leading) {
                             Text(account.displayName ?? account.login).font(.body.weight(.medium))
                             Text("\(account.kind.title) · \(account.login) @ \(account.host)")
@@ -184,7 +182,6 @@ private struct AccountsSettings: View {
                         }
                         Spacer()
                         Button(role: .destructive) { accountToDelete = account } label: { Image(systemName: "trash") }
-                            .buttonStyle(.glass)
                     }
                     .padding(.vertical, 4)
                 }
@@ -192,7 +189,7 @@ private struct AccountsSettings: View {
             HStack {
                 Spacer()
                 Button("Přidat účet", systemImage: "plus") { showAdd = true }
-                    .buttonStyle(.glassProminent)
+                    .buttonStyle(.borderedProminent)
             }
             .padding(14)
         }
@@ -241,13 +238,13 @@ private struct AddAccountSheet: View {
         .safeAreaInset(edge: .bottom) {
             HStack {
                 Spacer()
-                Button("Zrušit") { dismiss() }.buttonStyle(.glass)
+                Button("Zrušit") { dismiss() }
                 Button {
                     Task { await verify() }
                 } label: {
                     if isVerifying { ProgressView().controlSize(.small) } else { Text("Ověřit a přidat") }
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(token.isEmpty || isVerifying)
             }
@@ -308,7 +305,7 @@ private struct SSHKeysSettings: View {
                         Image(systemName: "key.fill")
                             .foregroundStyle(.tint)
                             .frame(width: 34, height: 34)
-                            .glassEffect(.regular, in: .circle)
+                            .background(.quaternary, in: .circle)
                         VStack(alignment: .leading) {
                             Text(key.name).font(.body.weight(.medium))
                             Text("\(key.type) · \(key.comment)")
@@ -322,11 +319,17 @@ private struct SSHKeysSettings: View {
                             NSPasteboard.general.setString(key.publicKey, forType: .string)
                             message = "Veřejný klíč \(key.name) zkopírován."
                         }
-                        .buttonStyle(.glass)
                         if !store.accounts.isEmpty {
                             Menu("Nahrát") {
                                 ForEach(store.accounts) { account in
-                                    Button(account.title) { Task { await upload(key, to: account) } }
+                                    if account.kind == .github {
+                                        Menu(account.title) {
+                                            Button("Pro přihlášení (push/pull)") { Task { await upload(key, to: account, purpose: .authentication) } }
+                                            Button("Pro podepisování commitů") { Task { await upload(key, to: account, purpose: .signing) } }
+                                        }
+                                    } else {
+                                        Button("\(account.title) – přihlášení i podpisy") { Task { await upload(key, to: account, purpose: .authentication) } }
+                                    }
                                 }
                             }
                             .fixedSize()
@@ -341,7 +344,7 @@ private struct SSHKeysSettings: View {
                 }
                 Spacer()
                 Button("Vygenerovat klíč", systemImage: "plus") { showGenerate = true }
-                    .buttonStyle(.glassProminent)
+                    .buttonStyle(.borderedProminent)
             }
             .padding(14)
         }
@@ -351,11 +354,11 @@ private struct SSHKeysSettings: View {
         }
     }
 
-    private func upload(_ key: SSHKey, to account: HostingAccount) async {
+    private func upload(_ key: SSHKey, to account: HostingAccount, purpose: HostingClient.SSHKeyPurpose) async {
         guard let client = store.client(for: account) else { return }
         do {
-            try await client.uploadSSHKey(title: "MacGit – \(Host.current().localizedName ?? "Mac")", publicKey: key.publicKey)
-            message = "Klíč nahrán na \(account.host)."
+            try await client.uploadSSHKey(title: "MacGit – \(Host.current().localizedName ?? "Mac")", publicKey: key.publicKey, purpose: purpose)
+            message = purpose == .signing ? "Podpisový klíč nahrán na \(account.host)." : "Klíč nahrán na \(account.host)."
         } catch {
             message = error.localizedDescription
         }
@@ -380,7 +383,7 @@ private struct GenerateKeySheet: View {
         .safeAreaInset(edge: .bottom) {
             HStack {
                 Spacer()
-                Button("Zrušit") { dismiss() }.buttonStyle(.glass)
+                Button("Zrušit") { dismiss() }
                 Button("Vygenerovat Ed25519") {
                     Task {
                         do {
@@ -394,7 +397,7 @@ private struct GenerateKeySheet: View {
                         }
                     }
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
                 .disabled(name.isEmpty)
             }
             .padding(14)
@@ -444,7 +447,7 @@ private struct GitSettings: View {
                         saved = true
                     }
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.borderedProminent)
             }
             .padding(14)
         }

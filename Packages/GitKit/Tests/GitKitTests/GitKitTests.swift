@@ -140,7 +140,47 @@ struct RepositoryTests {
         #expect(diff.additions == 1)
 
         let commit = try #require(try await repo.log().first)
+        #expect(commit.isSigned == false)
         let files = try await repo.files(in: commit)
         #expect(Set(files.map(\.path)) == ["a.txt", "b.txt"])
+    }
+
+    @Test func detectsAndVerifiesSSHSignatures() async throws {
+        // Klíč mimo pracovní strom, aby se nedostal do commitu.
+        let keyPath = FileManager.default.temporaryDirectory.appendingPathComponent("gitkit-key-\(UUID().uuidString)").path
+        let generate = Process()
+        generate.executableURL = URL(fileURLWithPath: "/usr/bin/ssh-keygen")
+        generate.arguments = ["-q", "-t", "ed25519", "-N", "", "-C", "test", "-f", keyPath]
+        try generate.run()
+        generate.waitUntilExit()
+        let publicKey = try String(contentsOfFile: keyPath + ".pub", encoding: .utf8)
+
+        try await repo.setConfig("gpg.format", "ssh")
+        try await repo.setConfig("user.signingkey", keyPath + ".pub")
+        try await repo.setConfig("commit.gpgsign", "true")
+        try write("a.txt", "signed\n")
+        try await repo.commit(message: "signed", changes: try await repo.status().changes)
+
+        let log = try await repo.log()
+        #expect(log[0].isSigned == true)
+        #expect(log[1].isSigned == false)
+
+        // Bez allowed signers nelze ověřit.
+        #expect(await repo.verifySignature(of: log[0]).status == .cannotCheck)
+
+        let signersFile = keyPath + ".allowed"
+        try SSHKeyManager.allowedSigners(emails: ["test@example.com"], publicKeys: [publicKey]).write(toFile: signersFile, atomically: true, encoding: .utf8)
+        let verification = await repo.verifySignature(of: log[0], allowedSignersFile: signersFile)
+        #expect(verification.status == .good)
+        #expect(verification.signer == "test@example.com")
+        #expect(verification.fingerprint.hasPrefix("SHA256:"))
+        #expect(await repo.verifySignature(of: log[1], allowedSignersFile: signersFile).status == .unsigned)
+
+        // Klíč, který není mezi důvěryhodnými → platný podpis neznámým klíčem.
+        let otherSigners = keyPath + ".other"
+        try SSHKeyManager.allowedSigners(emails: ["test@example.com"], publicKeys: ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOp0GG8NA6cTcFk7eYrYLZ/TCRK7oAwTUp7DlhXPfmN7"]).write(toFile: otherSigners, atomically: true, encoding: .utf8)
+        let unknown = await repo.verifySignature(of: log[0], allowedSignersFile: otherSigners)
+        #expect(unknown.status == .goodUnknownValidity)
+        #expect(unknown.signer.isEmpty)
     }
 }

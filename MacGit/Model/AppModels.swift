@@ -28,6 +28,10 @@ struct Space: Identifiable, Codable, Hashable {
     var symbol: String
     var color: SpaceColor
 
+    static func new() -> Space {
+        Space(name: "", symbol: suggestedSymbols.randomElement()!, color: SpaceColor.allCases.randomElement()!)
+    }
+
     static let suggestedSymbols = [
         "briefcase.fill", "house.fill", "person.fill", "star.fill", "hammer.fill", "graduationcap.fill",
         "gamecontroller.fill", "building.2.fill", "heart.fill", "leaf.fill", "flask.fill", "globe.europe.africa.fill",

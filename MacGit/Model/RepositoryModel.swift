@@ -16,7 +16,7 @@ struct RepositoryConfig: Equatable {
 @Observable
 final class RepositoryModel {
     enum Section: String, CaseIterable, Identifiable {
-        case changes, history, branches, shelf, settings
+        case changes, history, branches, shelf
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -24,16 +24,34 @@ final class RepositoryModel {
             case .history: "Historie"
             case .branches: "Větve"
             case .shelf: "Shelf"
-            case .settings: "Nastavení"
             }
         }
         var symbol: String {
             switch self {
             case .changes: "square.and.pencil"
-            case .history: "clock.arrow.circlepath"
+            case .history: "clock"
             case .branches: "arrow.triangle.branch"
             case .shelf: "archivebox"
-            case .settings: "gearshape"
+            }
+        }
+        var searchPrompt: String {
+            switch self {
+            case .changes: "Filtrovat soubory"
+            case .history: "Hledat commity"
+            case .branches: "Hledat větve"
+            case .shelf: "Hledat ve shelfu"
+            }
+        }
+    }
+
+    enum InspectorTab: String, CaseIterable, Identifiable {
+        case file, commit, repository
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .file: "Soubor"
+            case .commit: "Commit"
+            case .repository: "Repozitář"
             }
         }
     }
@@ -43,7 +61,26 @@ final class RepositoryModel {
     private(set) var repository: GitRepository
     private var watcher: RepositoryWatcher?
 
-    var section: Section = .changes
+    var section: Section = .changes {
+        didSet {
+            guard oldValue != section else { return }
+            switch section {
+            case .changes: if inspectorTab == .commit { inspectorTab = .file }
+            case .history: if inspectorTab == .file { inspectorTab = .commit }
+            default: break
+            }
+            if section == .history { Task { await loadHistory() } }
+        }
+    }
+    var inspectorTab: InspectorTab = .file
+    /// Filtr z vyhledávacího pole v toolbaru – platí pro aktuální sekci.
+    var searchText = ""
+    var selectedChangePaths: Set<String> = [] {
+        didSet { selectedChangePath = selectedChangePaths.count == 1 ? selectedChangePaths.first : nil }
+    }
+    var selectedBranchID: String? { didSet { if oldValue != selectedBranchID { Task { await loadBranchCommits() } } } }
+    var branchCommits: [Commit] = []
+    var selectedShelfID: UUID?
     var status = StatusSnapshot()
     var workspace: ProjectWorkspace { didSet { scheduleWorkspaceSave() } }
     var config = RepositoryConfig()
@@ -59,12 +96,19 @@ final class RepositoryModel {
     var commitFiles: [CommitFile] = []
     var selectedCommitFileID: String? { didSet { if oldValue != selectedCommitFileID { Task { await loadCommitDiff() } } } }
     var commitDiff: FileDiff?
+    /// Ověření podpisu vybraného commitu (načítá se líně).
+    var signatureVerification: SignatureVerification?
 
     /// Operace selhala kvůli zamčenému SSH klíči – UI se zeptá na passphrase a zkusí to znovu.
     var sshUnlockRequest: SSHUnlockRequest?
+    /// Dialog pro zadání textu vyvolaný z toolbaru nebo menu.
+    var pendingPrompt: TextPrompt?
+    var branchToDelete: Branch?
+    var shelfToDelete: Shelf?
     var busyTitle: String?
     var errorMessage: String?
-    var toast: String?
+    /// Poslední dokončená operace – zobrazuje se v podtitulu okna.
+    var lastActivity: (text: String, date: Date)?
     private(set) var hasLoaded = false
     private var saveTask: Task<Void, Never>?
     private var refreshTask: Task<Void, Never>?
@@ -130,7 +174,11 @@ final class RepositoryModel {
             branches = newBranches
             remotes = newRemotes
             pruneWorkspace()
-            if let path = selectedChangePath, !newStatus.changes.contains(where: { $0.path == path }) {
+            let currentPaths = Set(newStatus.changes.map(\.path))
+            if !selectedChangePaths.isSubset(of: currentPaths) {
+                selectedChangePaths = selectedChangePaths.intersection(currentPaths)
+            }
+            if let path = selectedChangePath, !currentPaths.contains(path) {
                 selectedChangePath = nil
                 currentDiff = nil
             } else if selectedChangePath != nil {
@@ -309,15 +357,51 @@ final class RepositoryModel {
     }
 
     func showToast(_ message: String) {
-        toast = message
-        Task {
-            try? await Task.sleep(for: .seconds(3))
-            if toast == message { toast = nil }
+        lastActivity = (message, .now)
+    }
+
+    /// Podtitul okna: probíhající operace, jinak poslední výsledek.
+    func statusLine(now: Date) -> String {
+        if let busyTitle { return busyTitle }
+        var parts: [String] = []
+        let branch = status.branch
+        if branch.ahead > 0 { parts.append("↑\(branch.ahead)") }
+        if branch.behind > 0 { parts.append("↓\(branch.behind)") }
+        if let activity = lastActivity {
+            let relative = activity.date.formatted(.relative(presentation: .named, unitsStyle: .wide))
+            parts.append(now.timeIntervalSince(activity.date) < 60 ? "\(activity.text) právě teď" : "\(activity.text) \(relative)")
+        } else if !status.changes.isEmpty {
+            parts.append("\(status.changes.count) změn")
+        } else if hasLoaded {
+            parts.append("Bez změn")
         }
+        return parts.joined(separator: " · ")
+    }
+
+    // MARK: Commit message
+
+    /// Shrnutí = první řádek zprávy.
+    var draftSummary: String {
+        get { workspace.draftMessage.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false).first.map(String.init) ?? "" }
+        set { workspace.draftMessage = Self.composeMessage(summary: newValue.replacingOccurrences(of: "\n", with: " "), description: draftDescription) }
+    }
+
+    /// Popis = zbytek zprávy za prázdným řádkem.
+    var draftDescription: String {
+        get {
+            let parts = workspace.draftMessage.split(separator: "\n", maxSplits: 1, omittingEmptySubsequences: false)
+            guard parts.count > 1 else { return "" }
+            return String(parts[1].drop { $0 == "\n" })
+        }
+        set { workspace.draftMessage = Self.composeMessage(summary: draftSummary, description: newValue) }
+    }
+
+    static func composeMessage(summary: String, description: String) -> String {
+        description.isEmpty ? summary : summary + "\n\n" + description
     }
 
     var canCommit: Bool {
-        !workspace.draftMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !draftSummary.trimmingCharacters(in: .whitespaces).isEmpty
             && (!includedChanges.isEmpty || amend)
             && busyTitle == nil
     }
@@ -420,6 +504,29 @@ final class RepositoryModel {
         }
     }
 
+    func promptNewBranch(from start: Branch?) {
+        pendingPrompt = TextPrompt(
+            title: "Nová větev",
+            message: start.map { "Vytvoří se z větve \($0.name) a přepne se na ni." } ?? "Vytvoří se z aktuálního HEAD a přepne se na ni.",
+            placeholder: "feature/nazev",
+            confirmTitle: "Vytvořit"
+        ) { [weak self] name in
+            Task { await self?.createBranch(name, from: start?.name, checkout: true) }
+        }
+    }
+
+    func promptShelve(_ changes: [FileChange], suggestedName: String) {
+        pendingPrompt = TextPrompt(
+            title: "Odložit do shelfu",
+            message: "Změny v \(changes.count) souborech se uloží stranou a z pracovní složky zmizí.",
+            placeholder: "Název",
+            initialValue: suggestedName,
+            confirmTitle: "Odložit"
+        ) { [weak self] name in
+            Task { await self?.shelve(changes, name: name) }
+        }
+    }
+
     func deleteBranch(_ branch: Branch, force: Bool) async {
         refreshCredentials()
         await perform("Mažu větev…", success: "Větev \(branch.name) smazána") { [self] in
@@ -448,13 +555,35 @@ final class RepositoryModel {
         }
     }
 
-    var selectedCommit: Commit? { commits.first { $0.id == selectedCommitID } }
+    var selectedCommit: Commit? { commits.first { $0.id == selectedCommitID } ?? branchCommits.first { $0.id == selectedCommitID } }
+
+    private func loadBranchCommits() async {
+        guard let branch = branches.first(where: { $0.id == selectedBranchID }) else { branchCommits = []; return }
+        branchCommits = (try? await repository.log(limit: 30, revision: branch.fullName)) ?? []
+    }
+
+    /// Odkaz na commit ve webovém rozhraní GitHubu/GitLabu.
+    func webURL(for commit: Commit) -> URL? {
+        guard let remote = remotes.first(where: { $0.name == "origin" }) ?? remotes.first,
+              let kind = store?.hostingKind(forRemote: remote.fetchURL),
+              let (host, path) = HostingClient.parseRemote(remote.fetchURL) else { return nil }
+        return URL(string: kind == .gitlab ? "https://\(host)/\(path)/-/commit/\(commit.hash)" : "https://\(host)/\(path)/commit/\(commit.hash)")
+    }
 
     private func loadCommitFiles() async {
-        guard let commit = selectedCommit else { commitFiles = []; return }
+        guard let commit = selectedCommit else { commitFiles = []; signatureVerification = nil; return }
+        signatureVerification = nil
         commitFiles = (try? await repository.files(in: commit)) ?? []
         selectedCommitFileID = commitFiles.first?.id
         await loadCommitDiff()
+        await verifySignature(of: commit)
+    }
+
+    private func verifySignature(of commit: Commit) async {
+        guard commit.isSigned, let store else { return }
+        let signers = await store.allowedSignersFile(extraEmails: [config.effectiveEmail, config.localEmail])
+        let result = await repository.verifySignature(of: commit, allowedSignersFile: signers)
+        if selectedCommitID == commit.id { signatureVerification = result }
     }
 
     private func loadCommitDiff() async {

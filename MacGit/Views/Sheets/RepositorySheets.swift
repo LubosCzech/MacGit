@@ -38,7 +38,6 @@ private struct SheetButtons: View {
         HStack {
             Spacer()
             Button("Zrušit") { dismiss() }
-                .buttonStyle(.glass)
                 .disabled(isWorking)
             Button(action: action) {
                 HStack(spacing: 8) {
@@ -46,11 +45,10 @@ private struct SheetButtons: View {
                     Text(confirmTitle)
                 }
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.borderedProminent)
             .keyboardShortcut(.defaultAction)
             .disabled(isDisabled || isWorking)
         }
-        .controlSize(.large)
         .padding(16)
     }
 }

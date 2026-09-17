@@ -170,9 +170,24 @@ public struct HostingClient: Sendable {
         return all
     }
 
+    public enum SSHKeyPurpose: Sendable {
+        /// Přihlašování (push/pull).
+        case authentication
+        /// Ověřování podpisů commitů („Verified“ na GitHubu).
+        case signing
+    }
+
     /// Nahraje veřejný SSH klíč k účtu.
-    public func uploadSSHKey(title: String, publicKey: String) async throws {
-        _ = try await request("/user/keys", method: "POST", body: ["title": title, "key": publicKey.trimmingCharacters(in: .whitespacesAndNewlines)])
+    /// GitHub eviduje přihlašovací a podpisové klíče zvlášť, GitLab umí oboje jedním klíčem.
+    public func uploadSSHKey(title: String, publicKey: String, purpose: SSHKeyPurpose = .authentication) async throws {
+        let key = publicKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        switch kind {
+        case .github:
+            let path = purpose == .signing ? "/user/ssh_signing_keys" : "/user/keys"
+            _ = try await request(path, method: "POST", body: ["title": title, "key": key])
+        case .gitlab:
+            _ = try await request("/user/keys", method: "POST", body: ["title": title, "key": key, "usage_type": "auth_and_signing"])
+        }
     }
 
     /// URL pro vytvoření pull/merge requestu z větve ve webovém rozhraní.

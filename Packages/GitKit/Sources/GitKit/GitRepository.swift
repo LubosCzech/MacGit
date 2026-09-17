@@ -169,7 +169,36 @@ public struct GitRepository: Sendable {
         var args = ["log", "--max-count=\(limit)", "--skip=\(skip)", "--date-order", "--pretty=format:\(GitParsers.logFormat)"]
         args.append(revision ?? "HEAD")
         let result = try await git(args)
-        return GitParsers.parseLog(result.output)
+        var commits = GitParsers.parseLog(result.output)
+
+        var rawArgs = ["log", "--max-count=\(limit)", "--skip=\(skip)", "--date-order", "--pretty=raw", "--no-show-signature"]
+        rawArgs.append(revision ?? "HEAD")
+        if let raw = try? await git(rawArgs) {
+            let signed = GitParsers.parseSignedHashes(raw.output)
+            for index in commits.indices where signed.contains(commits[index].hash) {
+                commits[index].isSigned = true
+            }
+        }
+        return commits
+    }
+
+    /// Ověří podpis commitu.
+    /// - Parameter allowedSignersFile: soubor s důvěryhodnými SSH klíči; použije se jen pokud
+    ///   repozitář nebo globální konfigurace nemá vlastní `gpg.ssh.allowedSignersFile`.
+    public func verifySignature(of commit: Commit, allowedSignersFile: String? = nil) async -> SignatureVerification {
+        guard commit.isSigned else { return SignatureVerification(status: .unsigned) }
+        var args: [String] = []
+        if let allowedSignersFile, await effectiveConfig("gpg.ssh.allowedSignersFile") == nil {
+            args += ["-c", "gpg.ssh.allowedSignersFile=\(allowedSignersFile)"]
+        }
+        args += ["log", "-1", "--format=\(GitParsers.verifyFormat)", commit.hash]
+        guard let result = try? await git(args, allowFailure: true), result.status == 0 else {
+            return SignatureVerification(status: .cannotCheck)
+        }
+        var verification = GitParsers.parseVerification(result.output)
+        // Commit podpis má, ale git ho neumí zpracovat (chybí allowed signers / gpg) → „N“.
+        if verification.status == .unsigned { verification.status = .cannotCheck }
+        return verification
     }
 
     public func files(in commit: Commit) async throws -> [CommitFile] {

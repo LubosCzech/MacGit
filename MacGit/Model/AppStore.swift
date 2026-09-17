@@ -28,10 +28,17 @@ final class AppStore {
     }
 
     var presentedSheet: SheetKind?
+    /// Sbalené skupiny v postranním panelu (id prostoru nebo „unassigned“).
+    var collapsedGroups: Set<String> = []
+    /// Viditelnost inspektoru – sdílí ji toolbar, menu i formulář commitu.
+    var inspectorShown = UserDefaults.standard.bool(forKey: "inspectorShown") {
+        didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") }
+    }
     var globalError: String?
 
-    enum SheetKind: Identifiable {
-        case clone, addExisting, newRepository
+    enum SheetKind: Identifiable, Hashable {
+        case clone, addExisting, newRepository, newSpace
+        case editSpace(Space)
         var id: Self { self }
     }
 
@@ -186,6 +193,19 @@ final class AppStore {
             guard let projectID else { return .system }
             return .https(username: username, secret: Keychain.get(Keychain.projectPasswordKey(projectID)) ?? "")
         }
+    }
+
+    /// Soubor `allowed_signers` pro ověřování SSH podpisů: tvoje klíče z ~/.ssh
+    /// jsou důvěryhodné pro tvoje e-maily (globální git, účty, identita repozitáře).
+    func allowedSignersFile(extraEmails: [String]) async -> String {
+        let url = supportURL.appendingPathComponent("allowed_signers")
+        var emails = extraEmails + accounts.compactMap(\.email)
+        if let global = await GitRepository.globalConfig("user.email", runner: runner) { emails.append(global) }
+        let content = SSHKeyManager.allowedSigners(emails: emails, publicKeys: SSHKeyManager.listKeys().map(\.publicKey))
+        if (try? String(contentsOf: url, encoding: .utf8)) != content {
+            try? content.write(to: url, atomically: true, encoding: .utf8)
+        }
+        return url.path
     }
 
     func client(for account: HostingAccount) -> HostingClient? {

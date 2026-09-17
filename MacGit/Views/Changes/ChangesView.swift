@@ -1,45 +1,22 @@
 import SwiftUI
 import GitKit
 
-struct ChangesView: View {
+/// Seznam změněných souborů seskupený do changelistů + formulář commitu.
+struct ChangesList: View {
     @Bindable var model: RepositoryModel
-    @State private var selection: Set<String> = []
-    @State private var prompt: TextPrompt?
     @State private var pendingDiscard: [FileChange] = []
 
-    var body: some View {
-        HSplitView {
-            changesList
-                .frame(minWidth: 280, idealWidth: 360, maxWidth: 460, maxHeight: .infinity)
-            DiffView(diff: model.currentDiff)
-                .frame(minWidth: 320, maxWidth: .infinity, maxHeight: .infinity)
-        }
-        .textPrompt($prompt)
-        .onChange(of: selection) { _, newValue in
-            model.selectedChangePath = newValue.count == 1 ? newValue.first : nil
-        }
-        .confirmationDialog(
-            "Zahodit změny v \(pendingDiscard.count) souborech?",
-            isPresented: Binding(get: { !pendingDiscard.isEmpty }, set: { if !$0 { pendingDiscard = [] } })
-        ) {
-            Button("Zahodit", role: .destructive) {
-                let changes = pendingDiscard
-                Task { await model.discard(changes) }
-            }
-        } message: {
-            Text("Tuto akci nelze vrátit. Nové soubory budou smazány. Pokud si změny chceš schovat, použij Shelf.")
-        }
+    private func filtered(_ changes: [FileChange]) -> [FileChange] {
+        guard !model.searchText.isEmpty else { return changes }
+        return changes.filter { $0.path.localizedCaseInsensitiveContains(model.searchText) }
     }
 
-    private var changesList: some View {
-        List(selection: $selection) {
-            if model.status.changes.isEmpty && model.hasLoaded {
-                EmptyStateView(title: "Pracovní strom je čistý", symbol: "checkmark.seal", message: "Žádné změny ke commitu.")
-                    .listRowSeparator(.hidden)
-            }
+    var body: some View {
+        List(selection: $model.selectedChangePaths) {
             ForEach(model.workspace.changelists) { changelist in
-                let changes = model.changes(in: changelist)
-                if !changes.isEmpty || changelist.id == model.workspace.activeChangelistID || model.workspace.changelists.count > 1 {
+                let changes = filtered(model.changes(in: changelist))
+                let isActive = changelist.id == model.workspace.activeChangelistID
+                if !changes.isEmpty || isActive || model.workspace.changelists.count > 1 {
                     Section {
                         ForEach(changes) { change in
                             ChangeRow(model: model, change: change)
@@ -47,7 +24,7 @@ struct ChangesView: View {
                                 .draggable(change.path)
                         }
                     } header: {
-                        ChangelistHeader(model: model, changelist: changelist, changes: changes, prompt: $prompt)
+                        ChangelistHeader(model: model, changelist: changelist, changes: changes)
                             .dropDestination(for: String.self) { paths, _ in
                                 model.move(paths: paths, to: changelist.id)
                                 return true
@@ -56,14 +33,36 @@ struct ChangesView: View {
                 }
             }
         }
+        .overlay {
+            if model.hasLoaded && model.status.changes.isEmpty {
+                EmptyStateView(title: "Žádné změny", symbol: "checkmark.circle", message: "Pracovní složka odpovídá poslednímu commitu.")
+            } else if !model.searchText.isEmpty && filtered(model.status.changes).isEmpty {
+                ContentUnavailableView.search(text: model.searchText)
+            }
+        }
         .contextMenu(forSelectionType: String.self) { paths in
             contextMenu(for: paths)
+        } primaryAction: { paths in
+            if let path = paths.first { NSWorkspace.shared.open(model.project.url.appendingPathComponent(path)) }
         }
         .onDeleteCommand {
-            pendingDiscard = model.status.changes.filter { selection.contains($0.path) }
+            pendingDiscard = model.status.changes.filter { model.selectedChangePaths.contains($0.path) }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            CommitPanel(model: model)
+            if !model.status.changes.isEmpty || model.amend {
+                CommitComposer(model: model)
+            }
+        }
+        .confirmationDialog(
+            pendingDiscard.count == 1 ? "Zahodit změny v souboru \(pendingDiscard[0].fileName)?" : "Zahodit změny v \(pendingDiscard.count) souborech?",
+            isPresented: Binding(get: { !pendingDiscard.isEmpty }, set: { if !$0 { pendingDiscard = [] } })
+        ) {
+            Button("Zahodit změny", role: .destructive) {
+                let changes = pendingDiscard
+                Task { await model.discard(changes) }
+            }
+        } message: {
+            Text("Tuto akci nelze vrátit. Nové soubory budou smazány. Chceš-li si změny schovat, použij Odložit do shelfu.")
         }
     }
 
@@ -71,34 +70,27 @@ struct ChangesView: View {
     private func contextMenu(for paths: Set<String>) -> some View {
         let changes = model.status.changes.filter { paths.contains($0.path) }
         if !changes.isEmpty {
-            Button("Zahrnout do commitu", systemImage: "checkmark.square") { model.setIncluded(true, for: changes) }
-            Button("Vyřadit z commitu", systemImage: "square") { model.setIncluded(false, for: changes) }
-            Divider()
+            Button("Zahrnout do commitu") { model.setIncluded(true, for: changes) }
+            Button("Vyřadit z commitu") { model.setIncluded(false, for: changes) }
             Menu("Přesunout do changelistu") {
                 ForEach(model.workspace.changelists) { list in
                     Button(list.name) { model.move(paths: Array(paths), to: list.id) }
                 }
                 Divider()
                 Button("Nový changelist…") {
-                    prompt = TextPrompt(title: "Nový changelist", placeholder: "Název", confirmTitle: "Vytvořit") { name in
+                    model.pendingPrompt = TextPrompt(title: "Nový changelist", placeholder: "Název", confirmTitle: "Vytvořit") { name in
                         let list = model.addChangelist(named: name)
                         model.move(paths: Array(paths), to: list.id)
                     }
                 }
             }
-            Button("Odložit do shelfu…", systemImage: "archivebox") {
-                prompt = TextPrompt(title: "Odložit do shelfu", message: "Změny se uloží jako patch a z pracovního stromu zmizí.", placeholder: "Název", initialValue: model.activeChangelist.name, confirmTitle: "Odložit") { name in
-                    Task { await model.shelve(changes, name: name) }
-                }
-            }
             Divider()
-            Button("Zobrazit ve Finderu", systemImage: "folder") { model.revealInFinder(changes[0].path) }
-            Button("Kopírovat cestu", systemImage: "doc.on.doc") {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(changes.map(\.path).joined(separator: "\n"), forType: .string)
-            }
+            Button("Odložit do shelfu…") { model.promptShelve(changes, suggestedName: model.activeChangelist.name) }
             Divider()
-            Button("Zahodit změny…", systemImage: "arrow.uturn.backward", role: .destructive) { pendingDiscard = changes }
+            Button("Zobrazit ve Finderu") { model.revealInFinder(changes[0].path) }
+            Button("Kopírovat cestu") { NSPasteboard.copy(changes.map(\.path).joined(separator: "\n")) }
+            Divider()
+            Button("Zahodit změny…", role: .destructive) { pendingDiscard = changes }
         }
     }
 }
@@ -108,21 +100,17 @@ private struct ChangeRow: View {
     let change: FileChange
 
     var body: some View {
-        HStack(spacing: 8) {
-            Toggle("", isOn: Binding(
+        HStack(spacing: 6) {
+            Toggle("Zahrnout do commitu", isOn: Binding(
                 get: { model.isIncluded(change) },
                 set: { model.setIncluded($0, for: [change]) }
             ))
             .toggleStyle(.checkbox)
             .labelsHidden()
 
-            FileLabel(path: change.path, kind: change.kind)
-            if let original = change.originalPath {
-                Text("← \((original as NSString).lastPathComponent)")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
+            FileNameLabel(path: change.path, originalPath: change.originalPath, isDeleted: change.kind == .deleted)
+            Spacer(minLength: 4)
+            StatusLetter(kind: change.kind)
         }
         .help(change.path)
     }
@@ -132,14 +120,13 @@ private struct ChangelistHeader: View {
     let model: RepositoryModel
     let changelist: Changelist
     let changes: [FileChange]
-    @Binding var prompt: TextPrompt?
 
     private var isActive: Bool { changelist.id == model.workspace.activeChangelistID }
 
     var body: some View {
         let includedCount = changes.filter(model.isIncluded).count
-        HStack(spacing: 8) {
-            Toggle("", isOn: Binding(
+        HStack(spacing: 6) {
+            Toggle("Zahrnout celý changelist", isOn: Binding(
                 get: { !changes.isEmpty && includedCount == changes.count },
                 set: { model.setIncluded($0, for: changes) }
             ))
@@ -148,46 +135,63 @@ private struct ChangelistHeader: View {
             .disabled(changes.isEmpty)
 
             Text(changelist.name)
-                .font(.headline)
                 .foregroundStyle(.primary)
             if isActive {
                 Text("aktivní")
-                    .font(.caption2.weight(.semibold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 1)
-                    .glassEffect(.regular.tint(.accentColor.opacity(0.35)), in: .capsule)
+                    .foregroundStyle(.tint)
+                    .fontWeight(.regular)
             }
             Spacer()
             Text("\(changes.count)")
-                .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
+                .fontWeight(.regular)
+                .monospacedDigit()
             Menu {
-                Button("Nastavit jako aktivní", systemImage: "star") { model.setActive(changelist) }
+                Button("Nastavit jako aktivní") { model.setActive(changelist) }
                     .disabled(isActive)
-                Button("Přejmenovat…", systemImage: "pencil") {
-                    prompt = TextPrompt(title: "Přejmenovat changelist", placeholder: "Název", initialValue: changelist.name, confirmTitle: "Uložit") { model.rename(changelist, to: $0) }
+                Button("Přejmenovat…") {
+                    model.pendingPrompt = TextPrompt(title: "Přejmenovat changelist", placeholder: "Název", initialValue: changelist.name, confirmTitle: "Přejmenovat") { model.rename(changelist, to: $0) }
                 }
-                Button("Nový changelist…", systemImage: "plus") {
-                    prompt = TextPrompt(title: "Nový changelist", placeholder: "Název", confirmTitle: "Vytvořit") { model.addChangelist(named: $0) }
+                Button("Nový changelist…") {
+                    model.pendingPrompt = TextPrompt(title: "Nový changelist", placeholder: "Název", confirmTitle: "Vytvořit") { model.addChangelist(named: $0) }
                 }
                 Divider()
-                Button("Odložit celý do shelfu…", systemImage: "archivebox") {
-                    prompt = TextPrompt(title: "Odložit do shelfu", placeholder: "Název", initialValue: changelist.name, confirmTitle: "Odložit") { name in
-                        Task { await model.shelve(changes, name: name) }
-                    }
-                }
-                .disabled(changes.isEmpty)
+                Button("Odložit do shelfu…") { model.promptShelve(changes, suggestedName: changelist.name) }
+                    .disabled(changes.isEmpty)
                 Divider()
-                Button("Smazat changelist", systemImage: "trash", role: .destructive) { model.delete(changelist) }
+                Button("Smazat changelist", role: .destructive) { model.delete(changelist) }
                     .disabled(model.workspace.changelists.count <= 1)
             } label: {
-                Image(systemName: "ellipsis.circle")
+                Image(systemName: "ellipsis")
             }
             .menuStyle(.button)
             .buttonStyle(.borderless)
             .menuIndicator(.hidden)
             .fixedSize()
+            .accessibilityLabel("Akce changelistu \(changelist.name)")
         }
-        .padding(.vertical, 2)
+    }
+}
+
+/// Detail: diff vybraného souboru.
+struct ChangeDetail: View {
+    let model: RepositoryModel
+
+    var body: some View {
+        if model.selectedChangePaths.count > 1 {
+            let changes = model.status.changes.filter { model.selectedChangePaths.contains($0.path) }
+            ContentUnavailableView {
+                Label("Vybráno \(changes.count) souborů", systemImage: "doc.on.doc")
+            } description: {
+                Text("Pro zobrazení rozdílů vyber jeden soubor.")
+            } actions: {
+                Button("Zahrnout do commitu") { model.setIncluded(true, for: changes) }
+                Button("Odložit do shelfu…") { model.promptShelve(changes, suggestedName: model.activeChangelist.name) }
+            }
+        } else if model.status.changes.isEmpty && model.hasLoaded {
+            EmptyStateView(title: "Vše je commitnuté", symbol: "checkmark.seal", message: model.status.branch.ahead > 0 ? "Na push čeká \(model.status.branch.ahead) commitů." : nil)
+        } else {
+            DiffView(diff: model.currentDiff)
+        }
     }
 }

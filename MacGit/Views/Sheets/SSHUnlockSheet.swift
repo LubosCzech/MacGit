@@ -16,67 +16,80 @@ struct SSHUnlockSheet: View {
     @State private var keyIsEncrypted = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 14) {
                 Image(systemName: "key.fill")
-                    .font(.title)
+                    .font(.system(size: 28))
                     .foregroundStyle(.tint)
-                    .frame(width: 52, height: 52)
-                    .glassEffect(.regular.tint(.accentColor.opacity(0.2)), in: .rect(cornerRadius: 14))
+                    .frame(width: 48, height: 48)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("SSH klíč je zamčený").font(.title3.bold())
-                    Text("Git se nemohl přihlásit, protože klíč chráněný passphrase není načtený v ssh-agentovi. Zadej passphrase – klíč se přidá do agenta a operace se zopakuje.")
+                    Text("Odemknout SSH klíč")
+                        .font(.headline)
+                    Text("Git se nemohl přihlásit, protože klíč chráněný passphrase není načtený. Po odemčení se operace zopakuje.")
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding([.horizontal, .top], 20)
 
-            Form {
-                Picker("Klíč", selection: $keyPath) {
-                    ForEach(keys) { key in
-                        Text("\(key.name) (\(key.type.replacingOccurrences(of: "ssh-", with: "")))").tag(key.privateKeyPath)
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
+                GridRow {
+                    Text("Klíč:").gridColumnAlignment(.trailing)
+                    Picker("Klíč", selection: $keyPath) {
+                        ForEach(keys) { key in
+                            Text("\(key.name) (\(key.type.replacingOccurrences(of: "ssh-", with: "").uppercased()))").tag(key.privateKeyPath)
+                        }
                     }
+                    .labelsHidden()
                 }
                 if keyIsEncrypted {
-                    SecureField("Passphrase", text: $passphrase)
-                        .onSubmit(unlock)
-                    Toggle("Uložit passphrase do Klíčenky macOS", isOn: $storeInKeychain)
+                    GridRow {
+                        Text("Passphrase:").gridColumnAlignment(.trailing)
+                        SecureField("Passphrase", text: $passphrase)
+                            .labelsHidden()
+                            .onSubmit(unlock)
+                    }
+                    GridRow {
+                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                        Toggle("Uložit do Klíčenky macOS", isOn: $storeInKeychain)
+                    }
                 } else {
-                    Label("Tento klíč passphrase nemá – GitHub/GitLab ho pravděpodobně nezná. Nahraj veřejný klíč v Nastavení → SSH klíče.", systemImage: "info.circle")
-                        .foregroundStyle(.orange)
-                }
-                DisclosureGroup("Výstup gitu") {
-                    Text(request.message)
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .textSelection(.enabled)
-                }
-                if let error {
-                    Label(error, systemImage: "xmark.octagon").foregroundStyle(.red)
+                    GridRow {
+                        Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
+                        Text("Tento klíč nemá passphrase – server ho nejspíš nezná. Nahraj veřejný klíč v Nastavení → SSH klíče.")
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
-            .formStyle(.grouped)
+
+            if let error {
+                Label(error, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(.red)
+            }
+
+            DisclosureGroup("Podrobnosti chyby") {
+                Text(request.message)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .font(.callout)
 
             HStack {
                 Spacer()
-                Button("Zrušit") { dismiss() }
-                    .buttonStyle(.glass)
+                Button("Zrušit", role: .cancel) { dismiss() }
                     .disabled(isWorking)
                 Button(action: unlock) {
-                    HStack(spacing: 8) {
-                        if isWorking { ProgressView().controlSize(.small) }
-                        Text("Odemknout a zkusit znovu")
-                    }
+                    if isWorking { ProgressView().controlSize(.small) } else { Text("Odemknout") }
                 }
-                .buttonStyle(.glassProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(keyPath.isEmpty || !keyIsEncrypted || passphrase.isEmpty || isWorking)
             }
-            .controlSize(.large)
-            .padding(16)
         }
-        .frame(width: 520)
+        .padding(20)
+        .frame(width: 460)
         .task {
             keys = SSHKeyManager.listKeys()
             keyPath = request.suggestedKeyPath.flatMap { path in keys.first { $0.privateKeyPath == path }?.privateKeyPath } ?? ""

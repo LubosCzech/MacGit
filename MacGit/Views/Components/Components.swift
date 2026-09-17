@@ -1,14 +1,16 @@
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 import GitKit
 
 extension ChangeKind {
     var color: Color {
         switch self {
         case .added, .untracked: .green
-        case .modified, .typeChanged: .blue
+        case .modified, .typeChanged: .orange
         case .deleted: .red
         case .renamed, .copied: .purple
-        case .conflicted: .orange
+        case .conflicted: .pink
         case .ignored: .gray
         }
     }
@@ -21,73 +23,77 @@ extension ChangeKind {
         case .renamed: "Přejmenován"
         case .copied: "Zkopírován"
         case .typeChanged: "Změna typu"
-        case .untracked: "Nový"
+        case .untracked: "Nový, nesledovaný"
         case .conflicted: "Konflikt"
         case .ignored: "Ignorován"
         }
     }
 }
 
-struct StatusBadge: View {
+/// Písmeno stavu vpravo v řádku (jako v Xcode).
+struct StatusLetter: View {
     let kind: ChangeKind
 
     var body: some View {
         Text(kind.letter)
-            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .font(.system(size: 11, weight: .bold))
             .foregroundStyle(kind.color)
-            .frame(width: 18, height: 18)
-            .background(kind.color.opacity(0.16), in: .rect(cornerRadius: 5))
+            .frame(width: 14)
             .help(kind.title)
+            .accessibilityLabel(kind.title)
     }
 }
 
-struct FileLabel: View {
+/// Systémová ikona typu souboru podle přípony.
+struct FileIcon: View {
     let path: String
-    var kind: ChangeKind
+    var size: CGFloat = 16
+
+    @MainActor private static var cache: [String: NSImage] = [:]
 
     var body: some View {
-        HStack(spacing: 8) {
-            StatusBadge(kind: kind)
-            let name = (path as NSString).lastPathComponent
-            let dir = (path as NSString).deletingLastPathComponent
-            Text(name)
-                .strikethrough(kind == .deleted, color: .secondary)
+        Image(nsImage: Self.icon(for: (path as NSString).pathExtension))
+            .resizable()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
+    }
+
+    @MainActor static func icon(for ext: String) -> NSImage {
+        if let cached = cache[ext] { return cached }
+        let type = UTType(filenameExtension: ext) ?? .data
+        let image = NSWorkspace.shared.icon(for: type)
+        cache[ext] = image
+        return image
+    }
+}
+
+/// Název souboru + šedá cesta ke složce.
+struct FileNameLabel: View {
+    let path: String
+    var originalPath: String? = nil
+    var isDeleted = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            FileIcon(path: path)
+            Text((path as NSString).lastPathComponent)
+                .strikethrough(isDeleted, color: .secondary)
                 .lineLimit(1)
-            if !dir.isEmpty {
+                .layoutPriority(1)
+            let dir = (path as NSString).deletingLastPathComponent
+            if let originalPath {
+                let originalName = (originalPath as NSString).lastPathComponent
+                let originalDir = (originalPath as NSString).deletingLastPathComponent
+                Text("← \(originalName == (path as NSString).lastPathComponent ? (originalDir.isEmpty ? "/" : originalDir + "/") : originalName)")
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            } else if !dir.isEmpty {
                 Text(dir)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-                    .truncationMode(.head)
+                    .truncationMode(.middle)
             }
         }
-    }
-}
-
-/// Plovoucí oznámení ve stylu Liquid Glass.
-struct ToastView: View {
-    let message: String
-    var symbol = "checkmark.circle.fill"
-
-    var body: some View {
-        Label(message, systemImage: symbol)
-            .font(.callout.weight(.medium))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .glassEffect(.regular.tint(.green.opacity(0.25)), in: .capsule)
-    }
-}
-
-struct BusyIndicator: View {
-    let title: String
-
-    var body: some View {
-        HStack(spacing: 10) {
-            ProgressView().controlSize(.small)
-            Text(title).font(.callout)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .glassEffect(.regular, in: .capsule)
     }
 }
 
@@ -122,10 +128,12 @@ struct TextPromptSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(prompt.title).font(.title3.bold())
+        VStack(alignment: .leading, spacing: 12) {
+            Text(prompt.title).font(.headline)
             if let message = prompt.message {
-                Text(message).foregroundStyle(.secondary)
+                Text(message)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             TextField(prompt.placeholder, text: $value)
                 .textFieldStyle(.roundedBorder)
@@ -133,15 +141,14 @@ struct TextPromptSheet: View {
             HStack {
                 Spacer()
                 Button("Zrušit", role: .cancel) { dismiss() }
-                    .buttonStyle(.glass)
                 Button(prompt.confirmTitle, action: confirm)
-                    .buttonStyle(.glassProminent)
-                    .disabled(value.trimmingCharacters(in: .whitespaces).isEmpty)
                     .keyboardShortcut(.defaultAction)
+                    .disabled(value.trimmingCharacters(in: .whitespaces).isEmpty)
             }
+            .padding(.top, 4)
         }
-        .padding(22)
-        .frame(width: 400)
+        .padding(20)
+        .frame(width: 380)
         .onAppear { value = prompt.initialValue }
     }
 
@@ -169,29 +176,48 @@ struct SpaceIcon: View {
             .foregroundStyle(.white)
             .frame(width: size, height: size)
             .background(space.color.color.gradient, in: .rect(cornerRadius: size * 0.28))
+            .accessibilityHidden(true)
     }
 }
 
-/// Vyhledávací pole v kapsli z tekutého skla nad seznamem.
-struct SearchField: View {
-    @Binding var text: String
-    let prompt: String
+/// Dvojice popisek–hodnota v inspektoru.
+struct InspectorRow<Content: View>: View {
+    let label: String
+    @ViewBuilder var content: Content
 
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-            TextField(prompt, text: $text)
-                .textFieldStyle(.plain)
-            if !text.isEmpty {
-                Button { text = "" } label: { Image(systemName: "xmark.circle.fill") }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-            }
+        GridRow(alignment: .firstTextBaseline) {
+            Text(label)
+                .foregroundStyle(.secondary)
+                .gridColumnAlignment(.trailing)
+            content
+                .gridColumnAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .glassEffect(.regular.interactive(), in: .capsule)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+    }
+}
+
+/// Nadpis sekce v inspektoru.
+struct InspectorSection<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}
+
+extension NSPasteboard {
+    static func copy(_ string: String) {
+        general.clearContents()
+        general.setString(string, forType: .string)
     }
 }

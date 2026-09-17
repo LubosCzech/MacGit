@@ -1,7 +1,8 @@
 import SwiftUI
 import GitKit
 
-struct ProjectSettingsView: View {
+/// Nastavení repozitáře v inspektoru: projekt, přihlášení, identita, podpis, remoty.
+struct RepositoryInspector: View {
     let model: RepositoryModel
     @Environment(AppStore.self) private var store
 
@@ -20,20 +21,21 @@ struct ProjectSettingsView: View {
                 Section("Projekt") {
                     TextField("Název", text: binding.name)
                     LabeledContent("Umístění") {
-                        HStack {
-                            Text((binding.wrappedValue.path as NSString).abbreviatingWithTildeInPath)
-                                .foregroundStyle(.secondary)
-                                .textSelection(.enabled)
-                            Button("Finder") { model.revealInFinder() }
-                                .buttonStyle(.glass)
-                                .controlSize(.small)
-                        }
+                        Text((binding.wrappedValue.path as NSString).abbreviatingWithTildeInPath)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                            .textSelection(.enabled)
+                            .help(binding.wrappedValue.path)
                     }
                     Picker("Prostor", selection: binding.spaceID) {
                         Text("Nezařazené").tag(UUID?.none)
                         ForEach(store.spaces) { space in
                             Label(space.name, systemImage: space.symbol).tag(Optional(space.id))
                         }
+                    }
+                    HStack {
+                        Button("Zobrazit ve Finderu") { model.revealInFinder() }
+                        Button("Terminál") { model.openInTerminal() }
                     }
                 }
 
@@ -96,59 +98,67 @@ struct ProjectSettingsView: View {
 
             Section("Remoty") {
                 ForEach(model.remotes) { remote in
-                    HStack {
-                        Text(remote.name).frame(width: 80, alignment: .leading).fontWeight(.medium)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(remote.name).fontWeight(.medium)
+                            Spacer()
+                            if let draft = remoteDrafts[remote.name], draft != remote.fetchURL {
+                                Button("Uložit") {
+                                    Task {
+                                        await model.saveRemote(name: remote.name, url: draft, isNew: false)
+                                        remoteDrafts[remote.name] = nil
+                                    }
+                                }
+                                .controlSize(.small)
+                            }
+                            Button {
+                                remoteToRemove = remote
+                            } label: {
+                                Image(systemName: "minus.circle")
+                            }
+                            .buttonStyle(.borderless)
+                            .accessibilityLabel("Odebrat remote \(remote.name)")
+                        }
                         TextField("URL", text: Binding(
                             get: { remoteDrafts[remote.name] ?? remote.fetchURL },
                             set: { remoteDrafts[remote.name] = $0 }
                         ))
                         .labelsHidden()
-                        if let draft = remoteDrafts[remote.name], draft != remote.fetchURL {
-                            Button("Uložit") {
-                                Task {
-                                    await model.saveRemote(name: remote.name, url: draft, isNew: false)
-                                    remoteDrafts[remote.name] = nil
-                                }
-                            }
-                            .buttonStyle(.glassProminent)
-                        }
-                        Button(role: .destructive) { remoteToRemove = remote } label: { Image(systemName: "minus.circle") }
-                            .buttonStyle(.borderless)
+                        .font(.callout.monospaced())
                     }
                 }
-                HStack {
+                VStack(alignment: .leading, spacing: 4) {
                     TextField("Název", text: $newRemoteName, prompt: Text("origin"))
-                        .labelsHidden()
-                        .frame(width: 80)
                     TextField("URL", text: $newRemoteURL, prompt: Text("git@github.com:owner/repo.git"))
-                        .labelsHidden()
-                    Button("Přidat") {
-                        let name = newRemoteName.isEmpty ? "origin" : newRemoteName
-                        Task {
-                            await model.saveRemote(name: name, url: newRemoteURL, isNew: true)
-                            newRemoteName = ""
-                            newRemoteURL = ""
+                    HStack {
+                        Spacer()
+                        Button("Přidat remote") {
+                            let name = newRemoteName.isEmpty ? "origin" : newRemoteName
+                            Task {
+                                await model.saveRemote(name: name, url: newRemoteURL, isNew: true)
+                                newRemoteName = ""
+                                newRemoteURL = ""
+                            }
                         }
+                        .disabled(newRemoteURL.isEmpty)
                     }
-                    .buttonStyle(.glass)
-                    .disabled(newRemoteURL.isEmpty)
                 }
             }
         }
         .formStyle(.grouped)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            HStack {
-                Spacer()
-                Button("Vrátit") { load() }
-                    .buttonStyle(.glass)
-                    .disabled(!hasChanges)
-                Button("Uložit nastavení") { save() }
-                    .buttonStyle(.glassProminent)
-                    .keyboardShortcut("s")
-                    .disabled(!hasChanges)
+            if hasChanges {
+                HStack {
+                    Spacer()
+                    Button("Vrátit") { load() }
+                    Button("Uložit") { save() }
+                        .buttonStyle(.borderedProminent)
+                        .keyboardShortcut("s")
+                }
+                .padding(12)
+                .background(.bar)
+                .overlay(alignment: .top) { Divider() }
             }
-            .controlSize(.large)
-            .padding(14)
         }
         .confirmationDialog("Odebrat remote \(remoteToRemove?.name ?? "")?", isPresented: Binding(get: { remoteToRemove != nil }, set: { if !$0 { remoteToRemove = nil } })) {
             Button("Odebrat", role: .destructive) {

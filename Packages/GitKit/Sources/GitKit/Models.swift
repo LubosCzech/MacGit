@@ -88,11 +88,55 @@ public struct Commit: Identifiable, Hashable, Sendable {
     public var subject: String
     public var body: String
     public var refs: [String]
-    /// `%G?` – G/U/X/Y/R/E/B/N
-    public var signature: Character
+    /// Commit obsahuje podpis (GPG, SSH nebo X.509) – bez ověření.
+    public var isSigned: Bool = false
 
     public var id: String { hash }
-    public var isSigned: Bool { signature != "N" }
+}
+
+/// Výsledek ověření podpisu commitu (`%G?`).
+public struct SignatureVerification: Sendable, Equatable {
+    public enum Status: Sendable, Equatable {
+        /// Platný podpis důvěryhodným klíčem.
+        case good
+        /// Platný podpis, ale klíč není mezi důvěryhodnými (GPG bez důvěry, SSH mimo allowed signers).
+        case goodUnknownValidity
+        /// Klíč nebo podpis vypršel či byl revokován.
+        case expired, revoked
+        /// Podpis je neplatný – obsah commitu neodpovídá.
+        case bad
+        /// Podpis nelze ověřit (chybí klíč / allowed signers).
+        case cannotCheck
+        case unsigned
+    }
+
+    public var status: Status
+    /// `%GS` – podepisující (e-mail / jméno).
+    public var signer: String
+    /// `%GK` – ID nebo otisk klíče.
+    public var key: String
+    /// `%GF` – otisk klíče.
+    public var fingerprint: String
+
+    public init(status: Status, signer: String = "", key: String = "", fingerprint: String = "") {
+        self.status = status
+        self.signer = signer
+        self.key = key
+        self.fingerprint = fingerprint
+    }
+
+    init(code: Character, signer: String, key: String, fingerprint: String) {
+        let status: Status = switch code {
+        case "G": .good
+        case "U": .goodUnknownValidity
+        case "X", "Y": .expired
+        case "R": .revoked
+        case "B": .bad
+        case "E": .cannotCheck
+        default: .unsigned
+        }
+        self.init(status: status, signer: signer, key: key, fingerprint: fingerprint)
+    }
 }
 
 public struct Branch: Identifiable, Hashable, Sendable {

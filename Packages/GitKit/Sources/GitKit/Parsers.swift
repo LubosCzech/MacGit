@@ -83,14 +83,14 @@ public enum GitParsers {
 
     // MARK: log
 
-    public static let logFormat = "%H%x1f%h%x1f%P%x1f%an%x1f%ae%x1f%aI%x1f%s%x1f%b%x1f%D%x1f%G?%x1e"
+    public static let logFormat = "%H%x1f%h%x1f%P%x1f%an%x1f%ae%x1f%aI%x1f%s%x1f%b%x1f%D%x1e"
 
     public static func parseLog(_ text: String) -> [Commit] {
         let iso = ISO8601DateFormatter()
         return text.split(separator: recordSeparator).compactMap { raw in
             let record = raw.trimmingCharacters(in: .newlines)
             let f = record.split(separator: fieldSeparator, omittingEmptySubsequences: false).map(String.init)
-            guard f.count >= 10 else { return nil }
+            guard f.count >= 9 else { return nil }
             return Commit(
                 hash: f[0],
                 shortHash: f[1],
@@ -100,10 +100,40 @@ public enum GitParsers {
                 date: iso.date(from: f[5]) ?? .distantPast,
                 subject: f[6],
                 body: f[7].trimmingCharacters(in: .whitespacesAndNewlines),
-                refs: f[8].split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty },
-                signature: f[9].first ?? "N"
+                refs: f[8].split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
             )
         }
+    }
+
+    /// Z výstupu `git log --pretty=raw` vybere hashe commitů s hlavičkou `gpgsig` / `gpgsig-sha256`.
+    /// Na rozdíl od `%G?` nic neověřuje, takže je rychlé i pro stovky commitů.
+    public static func parseSignedHashes(_ raw: String) -> Set<String> {
+        var signed = Set<String>()
+        var current: Substring?
+        var inHeader = false
+        for line in raw.split(separator: "\n", omittingEmptySubsequences: false) {
+            if line.hasPrefix("commit ") {
+                current = line.dropFirst(7).split(separator: " ").first
+                inHeader = true
+            } else if line.isEmpty {
+                inHeader = false
+            } else if inHeader, line.hasPrefix("gpgsig"), let current {
+                signed.insert(String(current))
+            }
+        }
+        return signed
+    }
+
+    public static let verifyFormat = "%G?%x1f%GS%x1f%GK%x1f%GF"
+
+    public static func parseVerification(_ text: String) -> SignatureVerification {
+        let f = text.trimmingCharacters(in: .newlines).split(separator: fieldSeparator, omittingEmptySubsequences: false).map(String.init)
+        return SignatureVerification(
+            code: f.first?.first ?? "N",
+            signer: f.count > 1 ? f[1] : "",
+            key: f.count > 2 ? f[2] : "",
+            fingerprint: f.count > 3 ? f[3] : ""
+        )
     }
 
     // MARK: branches
