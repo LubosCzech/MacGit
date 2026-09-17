@@ -15,6 +15,7 @@
 		787FDDC04270365D105ED66F /* GitKit in Frameworks */ = {isa = PBXBuildFile; productRef = BBAD4A27BE81CBD6F66E2F7A /* GitKit */; };
 		7C5D237FFF5C0D9EC57F09A9 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8C77B26C7D00A67A7F5720 /* AppModels.swift */; };
 		80219AF6FFFE6AE57F732ED7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABC55CD09B6DF204CB25F52 /* Components.swift */; };
+		8803D75AD36D59C8DEC64E0F /* CommitMessageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD7D571578383236105585B8 /* CommitMessageGenerator.swift */; };
 		8B27DC5AF88C7D4A53C0ABD6 /* RepositoryWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */; };
 		8DCD29DE08052C328DCB051B /* RepositorySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A0491A14E5F4CC565658AC0 /* RepositorySheets.swift */; };
 		9025144D8E2F254D8AB892DF /* SSHUnlockSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 022AF7F3BD1C70C7C6DAA265 /* SSHUnlockSheet.swift */; };
@@ -57,6 +58,7 @@
 		D1A1DAF398DE9FF909F39301 /* RepositoryInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryInspector.swift; sourceTree = "<group>"; };
 		D49326877964FB96B73AA1A5 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D4D540014CE9F4EBE98020D7 /* InspectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorView.swift; sourceTree = "<group>"; };
+		DD7D571578383236105585B8 /* CommitMessageGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitMessageGenerator.swift; sourceTree = "<group>"; };
 		DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryWatcher.swift; sourceTree = "<group>"; };
 		E174CB857B2F297DB964E8C0 /* RepositoryColumns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryColumns.swift; sourceTree = "<group>"; };
 		EB200A52A61FED870B3C0EBE /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
@@ -167,6 +169,7 @@
 		A5F35EF3FD2847DCD5EE2704 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				DD7D571578383236105585B8 /* CommitMessageGenerator.swift */,
 				61A0BD53FFB494757CD42D6D /* Keychain.swift */,
 				DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */,
 			);
@@ -329,6 +332,7 @@
 				528422AB4950163B81B85334 /* BranchesView.swift in Sources */,
 				2A16C985B9CE599F1DA20F4D /* ChangesView.swift in Sources */,
 				EE88F0EF9CED9BD27D82FA9F /* CommitComposer.swift in Sources */,
+				8803D75AD36D59C8DEC64E0F /* CommitMessageGenerator.swift in Sources */,
 				80219AF6FFFE6AE57F732ED7 /* Components.swift in Sources */,
 				E25B4A6A241A39802D7503AE /* DebugSnapshots.swift in Sources */,
 				F82419B7644EC6038E00C2FE /* DiffView.swift in Sources */,

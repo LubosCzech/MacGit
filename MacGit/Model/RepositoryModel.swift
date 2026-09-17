@@ -421,6 +421,50 @@ final class RepositoryModel {
         }
     }
 
+    // MARK: AI návrh zprávy
+
+    var isSuggestingMessage = false
+    private var suggestionTask: Task<Void, Never>?
+
+    var canSuggestMessage: Bool {
+        !isSuggestingMessage && !includedChanges.isEmpty && CommitMessageGenerator.status == .available
+    }
+
+    /// Navrhne shrnutí a popis z vybraných změn (Apple Intelligence na zařízení).
+    func suggestCommitMessage() {
+        let changes = includedChanges
+        guard !changes.isEmpty, !isSuggestingMessage else { return }
+        if case let .unavailable(reason) = CommitMessageGenerator.status {
+            errorMessage = reason
+            return
+        }
+        let previous = workspace.draftMessage
+        isSuggestingMessage = true
+        suggestionTask = Task { [weak self] in
+            guard let self else { return }
+            defer { self.isSuggestingMessage = false }
+            let summary = await repository.changeSummary(for: changes, characterLimit: CommitMessageGenerator.summaryCharacterLimit)
+            let subjects = await repository.recentSubjects()
+            do {
+                let result = try await CommitMessageGenerator.suggest(summary: summary, branch: status.branch.head, recentSubjects: subjects) { [weak self] partialSummary, partialBody in
+                    guard let self, !Task.isCancelled else { return }
+                    self.workspace.draftMessage = Self.composeMessage(summary: partialSummary, description: partialBody)
+                }
+                guard !Task.isCancelled else { return }
+                workspace.draftMessage = result.summary.isEmpty ? previous : Self.composeMessage(summary: result.summary, description: result.body)
+            } catch is CancellationError {
+                workspace.draftMessage = previous
+            } catch {
+                workspace.draftMessage = previous
+                errorMessage = CommitMessageGenerator.message(for: error)
+            }
+        }
+    }
+
+    func cancelSuggestion() {
+        suggestionTask?.cancel()
+    }
+
     private func prefillAmend() async {
         if let message = await repository.lastCommitMessage(), workspace.draftMessage.isEmpty {
             workspace.draftMessage = message

@@ -184,3 +184,25 @@ struct RepositoryTests {
         #expect(unknown.signer.isEmpty)
     }
 }
+
+struct ChangeSummaryTests {
+    @Test func respectsLimitAndKeepsFileList() {
+        let lines = (0..<400).map { DiffLine(id: $0, kind: .addition, oldLine: nil, newLine: $0, text: "let value\($0) = compute(\($0))") }
+        let diff = FileDiff(path: "Sources/Big.swift", hunks: [DiffHunk(id: 0, header: "@@ -0,0 +1,400 @@ struct Big", lines: lines)])
+        let small = FileDiff(path: "README.md", hunks: [DiffHunk(id: 0, header: "@@ -1 +1 @@", lines: [
+            DiffLine(id: 0, kind: .deletion, oldLine: 1, newLine: nil, text: "Old title"),
+            DiffLine(id: 1, kind: .addition, oldLine: nil, newLine: 1, text: "New title")
+        ])])
+        let items: [(change: FileChange, diff: FileDiff?)] = [
+            (FileChange(path: "Sources/Big.swift", indexCode: "A", worktreeCode: ".", kind: .added), diff),
+            (FileChange(path: "README.md", indexCode: ".", worktreeCode: "M", kind: .modified), small)
+        ]
+        let text = ChangeSummary.render(items, characterLimit: 1_500)
+        #expect(text.count <= 1_500)
+        #expect(text.contains("A Sources/Big.swift +400 -0"))
+        #expect(text.contains("M README.md +1 -1"))
+        #expect(text.contains("@@ struct Big"))
+        // Rozpočet se dělí, takže se dostane i na druhý soubor.
+        #expect(text.contains("+New title"))
+    }
+}

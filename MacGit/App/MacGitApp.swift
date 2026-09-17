@@ -60,6 +60,9 @@ struct MacGitCommands: Commands {
             Button("Commit") { if let model, model.canCommit { Task { await model.commit(andPush: false) } } }
                 .keyboardShortcut(.return, modifiers: .command)
                 .disabled(!(model?.canCommit ?? false))
+            Button("Navrhnout zprávu commitu") { model?.suggestCommitMessage() }
+                .keyboardShortcut("g", modifiers: [.command, .option])
+                .disabled(!(model?.canSuggestMessage ?? false))
             Button("Commit a Push") { if let model, model.canCommit { Task { await model.commit(andPush: true) } } }
                 .keyboardShortcut(.return, modifiers: [.command, .option])
                 .disabled(!(model?.canCommit ?? false))
