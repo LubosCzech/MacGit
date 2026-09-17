@@ -72,6 +72,7 @@ struct FileNameLabel: View {
     let path: String
     var originalPath: String? = nil
     var isDeleted = false
+    var showsDirectory = true
 
     var body: some View {
         HStack(spacing: 6) {
@@ -87,7 +88,7 @@ struct FileNameLabel: View {
                 Text("← \(originalName == (path as NSString).lastPathComponent ? (originalDir.isEmpty ? "/" : originalDir + "/") : originalName)")
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
-            } else if !dir.isEmpty {
+            } else if showsDirectory, !dir.isEmpty {
                 Text(dir)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

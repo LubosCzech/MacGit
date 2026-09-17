@@ -28,6 +28,7 @@ struct MacGitApp: App {
 struct MacGitCommands: Commands {
     let store: AppStore
     @FocusedValue(\.repositoryModel) private var model
+    @AppStorage("changesAsTree") private var changesAsTree = false
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -46,6 +47,8 @@ struct MacGitCommands: Commands {
                     .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")))
                     .disabled(model == nil)
             }
+            Toggle("Změny jako strom složek", isOn: $changesAsTree)
+                .keyboardShortcut("l", modifiers: [.command, .option])
             Divider()
             Button(store.inspectorShown ? "Skrýt inspektor" : "Zobrazit inspektor") { store.inspectorShown.toggle() }
                 .keyboardShortcut("i", modifiers: [.command, .option])

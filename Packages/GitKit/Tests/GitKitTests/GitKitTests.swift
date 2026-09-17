@@ -206,3 +206,27 @@ struct ChangeSummaryTests {
         #expect(text.contains("+New title"))
     }
 }
+
+struct FileTreeTests {
+    private func change(_ path: String) -> FileChange {
+        FileChange(path: path, indexCode: ".", worktreeCode: "M", kind: .modified)
+    }
+
+    @Test func buildsCompactTree() {
+        let tree = FileTree.build([
+            change("README.md"),
+            change("Packages/GitKit/Sources/GitKit/Parsers.swift"),
+            change("Packages/GitKit/Sources/GitKit/Models.swift"),
+            change("Packages/GitKit/Tests/GitKitTests/GitKitTests.swift"),
+            change("MacGit/App/MacGitApp.swift")
+        ])
+        // Složky před soubory, abecedně.
+        #expect(tree.map(\.name) == ["MacGit/App", "Packages/GitKit", "README.md"])
+        let packages = tree[1]
+        #expect(packages.isDirectory)
+        #expect(packages.children.map(\.name) == ["Sources/GitKit", "Tests/GitKitTests"])
+        #expect(packages.children[0].children.map(\.name) == ["Models.swift", "Parsers.swift"])
+        #expect(packages.changes.count == 3)
+        #expect(tree[0].id == "dir:MacGit/App")
+    }
+}

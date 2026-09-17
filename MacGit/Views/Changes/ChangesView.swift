@@ -5,6 +5,9 @@ import GitKit
 struct ChangesList: View {
     @Bindable var model: RepositoryModel
     @State private var pendingDiscard: [FileChange] = []
+    @AppStorage("changesAsTree") private var asTree = false
+    /// Sbalené složky (id uzlu) – ve výchozím stavu je strom rozbalený.
+    @State private var collapsedFolders: Set<String> = []
 
     private func filtered(_ changes: [FileChange]) -> [FileChange] {
         guard !model.searchText.isEmpty else { return changes }
@@ -18,10 +21,14 @@ struct ChangesList: View {
                 let isActive = changelist.id == model.workspace.activeChangelistID
                 if !changes.isEmpty || isActive || model.workspace.changelists.count > 1 {
                     Section {
-                        ForEach(changes) { change in
-                            ChangeRow(model: model, change: change)
-                                .tag(change.path)
-                                .draggable(change.path)
+                        if asTree {
+                            FileTreeRows(model: model, nodes: FileTree.build(changes), collapsed: $collapsedFolders, discard: { pendingDiscard = $0 })
+                        } else {
+                            ForEach(changes) { change in
+                                ChangeRow(model: model, change: change)
+                                    .tag(change.path)
+                                    .draggable(change.path)
+                            }
                         }
                     } header: {
                         ChangelistHeader(model: model, changelist: changelist, changes: changes)
@@ -98,6 +105,7 @@ struct ChangesList: View {
 private struct ChangeRow: View {
     let model: RepositoryModel
     let change: FileChange
+    var showsDirectory = true
 
     var body: some View {
         HStack(spacing: 6) {
@@ -108,7 +116,7 @@ private struct ChangeRow: View {
             .toggleStyle(.checkbox)
             .labelsHidden()
 
-            FileNameLabel(path: change.path, originalPath: change.originalPath, isDeleted: change.kind == .deleted)
+            FileNameLabel(path: change.path, originalPath: change.originalPath, isDeleted: change.kind == .deleted, showsDirectory: showsDirectory)
             Spacer(minLength: 4)
             StatusLetter(kind: change.kind)
         }
@@ -192,6 +200,82 @@ struct ChangeDetail: View {
             EmptyStateView(title: "Vše je commitnuté", symbol: "checkmark.seal", message: model.status.branch.ahead > 0 ? "Na push čeká \(model.status.branch.ahead) commitů." : nil)
         } else {
             DiffView(diff: model.currentDiff)
+        }
+    }
+}
+
+/// Rekurzivní řádky stromu složek.
+private struct FileTreeRows: View {
+    let model: RepositoryModel
+    let nodes: [FileTreeNode]
+    @Binding var collapsed: Set<String>
+    let discard: ([FileChange]) -> Void
+
+    var body: some View {
+        ForEach(nodes) { node in
+            if let change = node.change {
+                ChangeRow(model: model, change: change, showsDirectory: false)
+                    .tag(change.path)
+                    .draggable(change.path)
+            } else {
+                DisclosureGroup(isExpanded: Binding(
+                    get: { !collapsed.contains(node.id) },
+                    set: { expanded in
+                        if expanded { collapsed.remove(node.id) } else { collapsed.insert(node.id) }
+                    }
+                )) {
+                    FileTreeRows(model: model, nodes: node.children, collapsed: $collapsed, discard: discard)
+                } label: {
+                    FolderRow(model: model, node: node, discard: discard)
+                }
+                .selectionDisabled()
+            }
+        }
+    }
+}
+
+private struct FolderRow: View {
+    let model: RepositoryModel
+    let node: FileTreeNode
+    let discard: ([FileChange]) -> Void
+
+    var body: some View {
+        let changes = node.changes
+        HStack(spacing: 6) {
+            // Toggle se zdroji umí i smíšený stav, když je zahrnutá jen část složky.
+            Toggle(sources: changes.map { change in
+                Binding(get: { model.isIncluded(change) }, set: { model.setIncluded($0, for: [change]) })
+            }, isOn: \.self) {
+                Text("Zahrnout složku \(node.name)")
+            }
+            .toggleStyle(.checkbox)
+            .labelsHidden()
+
+            Image(systemName: "folder.fill")
+                .foregroundStyle(.tint)
+                .accessibilityHidden(true)
+            Text(node.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 4)
+            Text("\(changes.count)")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+        }
+        .help(node.path)
+        .contextMenu {
+            Button("Zahrnout do commitu") { model.setIncluded(true, for: changes) }
+            Button("Vyřadit z commitu") { model.setIncluded(false, for: changes) }
+            Menu("Přesunout do changelistu") {
+                ForEach(model.workspace.changelists) { list in
+                    Button(list.name) { model.move(paths: changes.map(\.path), to: list.id) }
+                }
+            }
+            Divider()
+            Button("Odložit do shelfu…") { model.promptShelve(changes, suggestedName: (node.path as NSString).lastPathComponent) }
+            Button("Zobrazit ve Finderu") { model.revealInFinder(node.path) }
+            Divider()
+            Button("Zahodit změny ve složce…", role: .destructive) { discard(changes) }
         }
     }
 }

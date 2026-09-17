@@ -4,16 +4,29 @@ import GitKit
 /// Prostřední sloupec: přepínač sekcí a seznam (změny, commity, větve, shelf).
 struct RepositoryContentColumn: View {
     @Bindable var model: RepositoryModel
+    @AppStorage("changesAsTree") private var changesAsTree = false
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Zobrazení", selection: $model.section) {
-                ForEach(RepositoryModel.Section.allCases) { section in
-                    Text(title(for: section)).tag(section)
+            HStack(spacing: 8) {
+                Picker("Zobrazení", selection: $model.section) {
+                    ForEach(RepositoryModel.Section.allCases) { section in
+                        Text(title(for: section)).tag(section)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+
+                if model.section == .changes {
+                    Toggle(isOn: $changesAsTree) {
+                        Image(systemName: "list.bullet.indent")
+                    }
+                    .toggleStyle(.button)
+                    .buttonStyle(.borderless)
+                    .help(changesAsTree ? "Zobrazit jako seznam (⌥⌘L)" : "Zobrazit strom složek (⌥⌘L)")
+                    .accessibilityLabel("Strom složek")
                 }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
             .padding(.horizontal, 12)
             .padding(.top, 6)
             .padding(.bottom, 8)
