@@ -228,6 +228,18 @@ struct FileTreeTests {
         #expect(packages.children[0].children.map(\.name) == ["Models.swift", "Parsers.swift"])
         #expect(packages.changes.count == 3)
         #expect(tree[0].id == "dir:MacGit/App")
+        #expect(packages.fileCount == 3)
+    }
+
+    @Test func buildsLargeTreeQuickly() {
+        let changes = (0..<20_000).map { change("build/Intermediates/Module\($0 % 40)/Objects/file\($0).o") }
+        let clock = ContinuousClock()
+        let elapsed = clock.measure {
+            let tree = FileTree.build(changes)
+            #expect(tree.first?.fileCount == 20_000)
+            #expect(tree == FileTree.build(changes))
+        }
+        #expect(elapsed < .seconds(2))
     }
 }
 
@@ -379,5 +391,45 @@ struct LiveAgentReviewTests {
         #expect(ParsedReview.trimmedDocument(text).hasPrefix("# "))
         // Pracovní kopie uživatele zůstala beze změny a worktree je jen dočasný.
         #expect(try await repo.status().branch.head != parts[1] || true)
+    }
+}
+
+struct HostKeyTests {
+    @Test func parsesSSHEndpoints() {
+        #expect(SSHEndpoint.from(remote: "git@gitlab.deepgaming.eu:deepgaming/fortune-admin.git") == SSHEndpoint(host: "gitlab.deepgaming.eu"))
+        #expect(SSHEndpoint.from(remote: "ssh://git@example.com:2222/team/repo.git") == SSHEndpoint(host: "example.com", port: 2222))
+        #expect(SSHEndpoint(host: "example.com", port: 2222).knownHostsName == "[example.com]:2222")
+        #expect(SSHEndpoint.from(remote: "https://gitlab.deepgaming.eu/deepgaming/x.git") == nil)
+    }
+
+    @Test func detectsHostKeyProblems() {
+        #expect(HostKeyTrust.problem(in: GitError(arguments: [], status: 128, message: "Host key verification failed.\nfatal: Could not read from remote repository.")) == .unknown)
+        #expect(HostKeyTrust.problem(in: GitError(arguments: [], status: 128, message: "@@@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @@@\nHost key verification failed.")) == .changed)
+        #expect(HostKeyTrust.problem(in: GitError(arguments: [], status: 128, message: "Permission denied (publickey).")) == nil)
+    }
+
+    @Test func appendsTrustedKeysOnce() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("known_hosts-\(UUID().uuidString)")
+        try "other.host ssh-ed25519 AAAA".write(to: file, atomically: true, encoding: .utf8)
+        let key = HostKey(line: "example.com ssh-ed25519 BBBB", type: "ED25519", fingerprint: "SHA256:x", bits: "256")
+        try HostKeyTrust.trust([key], knownHosts: file)
+        try HostKeyTrust.trust([key], knownHosts: file)
+        #expect(try String(contentsOf: file, encoding: .utf8) == "other.host ssh-ed25519 AAAA\nexample.com ssh-ed25519 BBBB\n")
+    }
+}
+
+struct GitErrorSummaryTests {
+    @Test func recognizesMissingUpstreamBehindFetchNoise() {
+        let branches = (0..<80).map { "* [new branch]          feat/x\($0) -> origin/feat/x\($0)" }.joined(separator: "\n")
+        let message = "From gitlab.deepgaming.eu:deepgaming/fortune-ui\n\(branches)\nThere is no tracking information for the current branch.\nPlease specify which branch you want to merge with."
+        let summary = GitErrorSummary.make(from: message)
+        #expect(summary.title == "Větev nemá nastavenou vzdálenou větev")
+        #expect(summary.details.contains("feat/x79"))
+    }
+
+    @Test func fallsBackToFatalLines() {
+        let summary = GitErrorSummary.make(from: "From host:repo\n * [new branch] a -> origin/a\nfatal: something unusual happened")
+        #expect(summary.title == "Git hlásí chybu")
+        #expect(summary.explanation == "something unusual happened")
     }
 }

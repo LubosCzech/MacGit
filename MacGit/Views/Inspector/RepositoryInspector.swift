@@ -125,6 +125,7 @@ struct RepositoryInspector: View {
                         ))
                         .labelsHidden()
                         .font(.callout.monospaced())
+                        .frame(minWidth: 0, maxWidth: .infinity)
                     }
                 }
                 VStack(alignment: .leading, spacing: 4) {

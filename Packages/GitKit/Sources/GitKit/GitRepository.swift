@@ -265,6 +265,11 @@ public struct GitRepository: Sendable {
         try await git(["fetch", "--all", "--prune"], network: true)
     }
 
+    /// Propojí lokální větev se vzdálenou (upstream).
+    public func setUpstream(branch: String, to remoteBranch: String) async throws {
+        try await git(["branch", "--set-upstream-to=\(remoteBranch)", branch])
+    }
+
     public func pull(rebase: Bool) async throws {
         try await git(["pull", rebase ? "--rebase" : "--no-rebase"], network: true)
     }

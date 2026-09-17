@@ -6,8 +6,8 @@ struct ChangesList: View {
     @Bindable var model: RepositoryModel
     @State private var pendingDiscard: [FileChange] = []
     @AppStorage("changesAsTree") private var asTree = false
-    /// Sbalené složky (id uzlu) – ve výchozím stavu je strom rozbalený.
-    @State private var collapsedFolders: Set<String> = []
+    /// Složky, jejichž rozbalení uživatel změnil oproti výchozímu stavu.
+    @State private var toggledFolders: Set<String> = []
 
     private func filtered(_ changes: [FileChange]) -> [FileChange] {
         guard !model.searchText.isEmpty else { return changes }
@@ -22,7 +22,7 @@ struct ChangesList: View {
                 if !changes.isEmpty || isActive || model.workspace.changelists.count > 1 {
                     Section {
                         if asTree {
-                            FileTreeRows(model: model, nodes: FileTree.build(changes), collapsed: $collapsedFolders, discard: { pendingDiscard = $0 })
+                            FileTreeRows(model: model, nodes: model.fileTree(for: changes), toggled: $toggledFolders, discard: { pendingDiscard = $0 })
                         } else {
                             ForEach(changes) { change in
                                 ChangeRow(model: model, change: change)
@@ -54,6 +54,11 @@ struct ChangesList: View {
         }
         .onDeleteCommand {
             pendingDiscard = model.status.changes.filter { model.selectedChangePaths.contains($0.path) }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if model.suggestsGitignore {
+                GitignoreBanner(model: model)
+            }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !model.status.changes.isEmpty || model.amend {
@@ -206,9 +211,12 @@ struct ChangeDetail: View {
 
 /// Rekurzivní řádky stromu složek.
 private struct FileTreeRows: View {
+    static let autoCollapseThreshold = 150
+
     let model: RepositoryModel
     let nodes: [FileTreeNode]
-    @Binding var collapsed: Set<String>
+    /// Uzly, u kterých uživatel přepnul výchozí rozbalení.
+    @Binding var toggled: Set<String>
     let discard: ([FileChange]) -> Void
 
     var body: some View {
@@ -218,13 +226,15 @@ private struct FileTreeRows: View {
                     .tag(change.path)
                     .draggable(change.path)
             } else {
+                // Velké složky (typicky build výstupy) jsou ve výchozím stavu sbalené.
+                let expandedByDefault = node.fileCount <= Self.autoCollapseThreshold
                 DisclosureGroup(isExpanded: Binding(
-                    get: { !collapsed.contains(node.id) },
+                    get: { toggled.contains(node.id) ? !expandedByDefault : expandedByDefault },
                     set: { expanded in
-                        if expanded { collapsed.remove(node.id) } else { collapsed.insert(node.id) }
+                        if expanded == expandedByDefault { toggled.remove(node.id) } else { toggled.insert(node.id) }
                     }
                 )) {
-                    FileTreeRows(model: model, nodes: node.children, collapsed: $collapsed, discard: discard)
+                    FileTreeRows(model: model, nodes: node.children, toggled: $toggled, discard: discard)
                 } label: {
                     FolderRow(model: model, node: node, discard: discard)
                 }
@@ -240,12 +250,14 @@ private struct FolderRow: View {
     let discard: ([FileChange]) -> Void
 
     var body: some View {
-        let changes = node.changes
         HStack(spacing: 6) {
-            // Toggle se zdroji umí i smíšený stav, když je zahrnutá jen část složky.
-            Toggle(sources: changes.map { change in
-                Binding(get: { model.isIncluded(change) }, set: { model.setIncluded($0, for: [change]) })
-            }, isOn: \.self) {
+            // Dva zdroje (všechny/některé zahrnuté) stačí na smíšený stav – bez vazby na každý soubor.
+            let changes = node.changes
+            let included = changes.lazy.filter(model.isIncluded).count
+            Toggle(sources: [
+                Binding(get: { included == changes.count && !changes.isEmpty }, set: { model.setIncluded($0, for: changes) }),
+                Binding(get: { included > 0 }, set: { model.setIncluded($0, for: changes) })
+            ], isOn: \.self) {
                 Text("Zahrnout složku \(node.name)")
             }
             .toggleStyle(.checkbox)
@@ -258,12 +270,13 @@ private struct FolderRow: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 4)
-            Text("\(changes.count)")
+            Text("\(node.fileCount)")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
         }
         .help(node.path)
         .contextMenu {
+            let changes = node.changes
             Button("Zahrnout do commitu") { model.setIncluded(true, for: changes) }
             Button("Vyřadit z commitu") { model.setIncluded(false, for: changes) }
             Menu("Přesunout do changelistu") {
@@ -277,5 +290,34 @@ private struct FolderRow: View {
             Divider()
             Button("Zahodit změny ve složce…", role: .destructive) { discard(changes) }
         }
+    }
+}
+
+/// Nabídka vytvoření .gitignore, když repozitář obsahuje tisíce nesledovaných souborů.
+private struct GitignoreBanner: View {
+    let model: RepositoryModel
+
+    var body: some View {
+        let untracked = model.status.changes.lazy.filter(\.isUntracked).count
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "doc.badge.gearshape")
+                .font(.title3)
+                .foregroundStyle(.orange)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Repozitář nemá .gitignore")
+                    .fontWeight(.semibold)
+                Text("Git vidí \(untracked) nesledovaných souborů – nejspíš build výstupy. Soubor .gitignore je z repozitáře vyřadí.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Vytvořit .gitignore") { model.createGitignore() }
+                    .controlSize(.small)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.orange.opacity(0.08))
+        .overlay(alignment: .bottom) { Divider() }
     }
 }

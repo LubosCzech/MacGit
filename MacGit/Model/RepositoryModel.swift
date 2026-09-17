@@ -101,11 +101,54 @@ final class RepositoryModel {
 
     /// Operace selhala kvůli zamčenému SSH klíči – UI se zeptá na passphrase a zkusí to znovu.
     var sshUnlockRequest: SSHUnlockRequest?
+    /// Neznámý SSH server – uživatel ověří otisk a potvrdí důvěru.
+    var hostTrustRequest: HostTrustRequest?
     /// Dialog pro zadání textu vyvolaný z toolbaru nebo menu.
     var pendingPrompt: TextPrompt?
     var branchToDelete: Branch?
     /// Cíl (větev/commit), pro který se otevírá dialog AI review.
     var reviewSheetTarget: ReviewTarget?
+
+    // MARK: Strom složek
+
+    @ObservationIgnored private var treeCache: [Int: [FileTreeNode]] = [:]
+
+    /// Strom pro seznam změn – sestaví se jen když se změní soubory nebo jejich stav.
+    func fileTree(for changes: [FileChange]) -> [FileTreeNode] {
+        var hasher = Hasher()
+        for change in changes {
+            hasher.combine(change.path)
+            hasher.combine(String(change.indexCode))
+            hasher.combine(String(change.worktreeCode))
+        }
+        let key = hasher.finalize()
+        if let cached = treeCache[key] { return cached }
+        let tree = FileTree.build(changes)
+        if treeCache.count > 8 { treeCache.removeAll() }
+        treeCache[key] = tree
+        return tree
+    }
+
+    // MARK: .gitignore
+
+    /// Repozitář bez .gitignore s velkým množstvím nesledovaných souborů (typicky build výstupy).
+    var suggestsGitignore: Bool {
+        guard hasLoaded else { return false }
+        let untracked = status.changes.lazy.filter(\.isUntracked).count
+        return untracked >= 300 && !FileManager.default.fileExists(atPath: project.url.appendingPathComponent(".gitignore").path)
+    }
+
+    func createGitignore() {
+        let url = project.url.appendingPathComponent(".gitignore")
+        guard !FileManager.default.fileExists(atPath: url.path) else { return }
+        do {
+            try GitignoreTemplate.contents(for: project.url).write(to: url, atomically: true, encoding: .utf8)
+            showToast("Vytvořen soubor .gitignore")
+            scheduleRefresh()
+        } catch {
+            errorMessage = "Nepodařilo se vytvořit .gitignore: \(error.localizedDescription)"
+        }
+    }
     var shelfToDelete: Shelf?
     var busyTitle: String?
     var errorMessage: String?
@@ -320,13 +363,31 @@ final class RepositoryModel {
             if let success { showToast(success) }
         } catch {
             busyTitle = nil
-            if SSHKeyManager.isKeyUnavailable(error), let request = makeUnlockRequest(error: error, title: title, success: success, work: work) {
+            if let problem = HostKeyTrust.problem(in: error), let endpoint = sshEndpoint {
+                hostTrustRequest = HostTrustRequest(
+                    endpoint: endpoint,
+                    problem: problem,
+                    message: error.localizedDescription,
+                    retry: { [weak self] in await self?.perform(title, success: success, work) }
+                )
+            } else if SSHKeyManager.isKeyUnavailable(error), let request = makeUnlockRequest(error: error, title: title, success: success, work: work) {
                 sshUnlockRequest = request
             } else {
                 errorMessage = error.localizedDescription
             }
         }
         await refresh()
+    }
+
+    /// SSH server remotu (origin, jinak první SSH remote).
+    var sshEndpoint: SSHEndpoint? {
+        let ordered = remotes.sorted { lhs, _ in lhs.name == "origin" }
+        for remote in ordered {
+            if let endpoint = SSHEndpoint.from(remote: remote.pushURL) ?? SSHEndpoint.from(remote: remote.fetchURL) {
+                return endpoint
+            }
+        }
+        return nil
     }
 
     private func makeUnlockRequest(error: Error, title: String, success: String?, work: @escaping () async throws -> Void) -> SSHUnlockRequest? {
@@ -530,7 +591,17 @@ final class RepositoryModel {
 
     func pull(rebase: Bool = false) async {
         refreshCredentials()
-        await perform("Pull…", success: "Pull dokončen") { [self] in try await repository.pull(rebase: rebase) }
+        await perform("Pull…", success: "Pull dokončen") { [self] in
+            // Větev bez upstreamu (typicky po odebrání a přidání remotu) propojíme s větví stejného jména na serveru.
+            if status.branch.upstream == nil, let head = status.branch.head {
+                let candidates = remotes.map { "\($0.name)/\(head)" }
+                if let remoteBranch = candidates.first(where: { name in branches.contains { $0.isRemote && $0.name == name } }) {
+                    try await repository.setUpstream(branch: head, to: remoteBranch)
+                    showToast("Větev \(head) propojena s \(remoteBranch)")
+                }
+            }
+            try await repository.pull(rebase: rebase)
+        }
     }
 
     func push(force: Bool = false) async {

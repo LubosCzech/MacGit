@@ -8,13 +8,53 @@ public struct FileTreeNode: Identifiable, Hashable, Sendable {
     public var path: String
     public var change: FileChange?
     public var children: [FileTreeNode]
+    /// Počet souborů v podstromu.
+    public private(set) var fileCount: Int
+    /// Otisk obsahu podstromu (cesty a stavy) – porovnání uzlů je O(1) i pro tisíce souborů.
+    public private(set) var signature: Int
+
+    public init(id: String, name: String, path: String, change: FileChange?, children: [FileTreeNode]) {
+        self.id = id
+        self.name = name
+        self.path = path
+        self.change = change
+        self.children = children
+        var hasher = Hasher()
+        hasher.combine(id)
+        if let change {
+            hasher.combine(change.path)
+            hasher.combine(String(change.indexCode))
+            hasher.combine(String(change.worktreeCode))
+            fileCount = 1
+        } else {
+            for child in children { hasher.combine(child.signature) }
+            fileCount = children.reduce(0) { $0 + $1.fileCount }
+        }
+        signature = hasher.finalize()
+    }
 
     public var isDirectory: Bool { change == nil }
 
     /// Všechny změny v podstromu.
     public var changes: [FileChange] {
-        if let change { return [change] }
-        return children.flatMap(\.changes)
+        var result: [FileChange] = []
+        result.reserveCapacity(fileCount)
+        collect(into: &result)
+        return result
+    }
+
+    private func collect(into result: inout [FileChange]) {
+        if let change { result.append(change); return }
+        for child in children { child.collect(into: &result) }
+    }
+
+    public static func == (lhs: FileTreeNode, rhs: FileTreeNode) -> Bool {
+        lhs.id == rhs.id && lhs.signature == rhs.signature
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(signature)
     }
 }
 

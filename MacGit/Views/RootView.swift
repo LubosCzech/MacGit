@@ -17,9 +17,11 @@ struct RootView: View {
             } else {
                 NavigationSplitView(columnVisibility: $columnVisibility) {
                     SidebarView()
+                        .stableColumnSize()
                         .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 340)
                 } detail: {
                     WelcomeView()
+                        .stableColumnSize()
                 }
                 .navigationTitle("MacGit")
             }
@@ -36,11 +38,7 @@ struct RootView: View {
                 }
             }
         }
-        .alert("Chyba", isPresented: Binding(get: { store.globalError != nil }, set: { if !$0 { store.globalError = nil } })) {
-            Button("OK") { store.globalError = nil }
-        } message: {
-            Text(store.globalError ?? "")
-        }
+        .errorSheet($store.globalError)
     }
 }
 
@@ -54,15 +52,19 @@ private struct RepositoryWindow: View {
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             SidebarView()
+                .stableColumnSize()
                 .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 340)
         } content: {
             RepositoryContentColumn(model: model)
+                .stableColumnSize()
                 .navigationSplitViewColumnWidth(min: 300, ideal: 370, max: 540)
         } detail: {
             RepositoryDetailColumn(model: model)
+                .stableColumnSize()
         }
         .inspector(isPresented: $inspectorShown) {
             InspectorView(model: model)
+                .stableColumnSize(alignment: .top)
                 .inspectorColumnWidth(min: 260, ideal: 300, max: 440)
         }
         .navigationTitle(model.project.name)
@@ -70,13 +72,12 @@ private struct RepositoryWindow: View {
         .searchable(text: $model.searchText, placement: .toolbar, prompt: model.section.searchPrompt)
         .toolbar { RepositoryToolbar(model: model, inspectorShown: $inspectorShown) }
         .focusedSceneValue(\.repositoryModel, model)
-        .alert("Git hlásí chybu", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
-            Button("OK") { model.errorMessage = nil }
-        } message: {
-            Text(model.errorMessage ?? "")
-        }
+        .errorSheet($model.errorMessage)
         .sheet(item: $model.sshUnlockRequest) { request in
             SSHUnlockSheet(model: model, request: request)
+        }
+        .sheet(item: $model.hostTrustRequest) { request in
+            HostTrustSheet(model: model, request: request)
         }
         .textPrompt($model.pendingPrompt)
         .sheet(item: $model.reviewSheetTarget) { target in
@@ -144,6 +145,14 @@ struct WelcomeView: View {
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+extension View {
+    /// Minimální velikost sloupce nezávislá na obsahu. Jinak se při změně obsahu (např. odebrání remotu)
+    /// může AppKit zacyklit v přepočtu omezení NSSplitView a aplikaci ukončit.
+    func stableColumnSize(alignment: Alignment = .center) -> some View {
+        frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: alignment)
     }
 }
 

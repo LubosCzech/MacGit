@@ -177,6 +177,15 @@ struct ReviewRecord: Identifiable, Codable, Hashable {
     var targetTitle: String { isCommitReview ? "commit \(headCommit)" : "větev \(branch)" }
 }
 
+/// Operace selhala, protože SSH server není mezi známými (known_hosts).
+struct HostTrustRequest: Identifiable {
+    let id = UUID()
+    var endpoint: SSHEndpoint
+    var problem: HostKeyTrust.Problem
+    var message: String
+    var retry: () async -> Void
+}
+
 /// Co se má zrevidovat.
 enum ReviewTarget: Identifiable, Hashable {
     case branch(Branch)
