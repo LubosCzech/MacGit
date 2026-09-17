@@ -28,6 +28,7 @@ struct HistoryList: View {
                             Button("Otevřít v prohlížeči") { NSWorkspace.shared.open(url) }
                         }
                         Divider()
+                        Button("AI review commitu…") { model.reviewSheetTarget = .commit(commit) }
                         Button("Nová větev z tohoto commitu…") {
                             model.pendingPrompt = TextPrompt(title: "Nová větev", message: "Z commitu \(commit.shortHash)", placeholder: "feature/nazev", confirmTitle: "Vytvořit") { name in
                                 Task { await model.createBranch(name, from: commit.hash, checkout: true) }

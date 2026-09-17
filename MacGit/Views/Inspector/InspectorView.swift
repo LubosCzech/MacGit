@@ -156,7 +156,15 @@ private struct CommitInspector: View {
 
                     Divider()
 
+                    ReviewsSection(model: model, target: .commit(commit), horizontalPadding: 16)
+                        .padding(.top, 12)
+
                     InspectorSection(title: "Akce") {
+                        Button {
+                            model.reviewSheetTarget = .commit(commit)
+                        } label: {
+                            Label("AI review commitu…", systemImage: "sparkle.magnifyingglass")
+                        }
                         HStack {
                             Button("Kopírovat hash") { NSPasteboard.copy(commit.hash) }
                             if let url = model.webURL(for: commit) {

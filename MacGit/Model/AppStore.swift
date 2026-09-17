@@ -46,6 +46,7 @@ final class AppStore {
     let supportURL: URL
     let askpassPath: String
     private var models: [UUID: RepositoryModel] = [:]
+    @ObservationIgnored private(set) lazy var reviews = ReviewCenter(store: self)
     private var isLoading = true
 
     init() {

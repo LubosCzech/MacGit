@@ -105,6 +105,7 @@ struct BranchActions: View {
         Button("Merge do \(model.status.branch.head ?? "aktuální větve")") { Task { await model.merge(branch) } }
             .disabled(branch.isCurrent)
         Button("Nová větev odsud…") { model.promptNewBranch(from: branch) }
+        Button("AI review…") { model.reviewSheetTarget = .branch(branch) }
         if !branch.isRemote {
             Button("Přejmenovat…") {
                 model.pendingPrompt = TextPrompt(title: "Přejmenovat větev", placeholder: "Název", initialValue: branch.name, confirmTitle: "Přejmenovat") { name in
@@ -149,6 +150,12 @@ struct BranchDetail: View {
                         Button("Merge do \(model.status.branch.head ?? "aktuální")") { Task { await model.merge(branch) } }
                             .disabled(branch.isCurrent)
                         Button("Nová větev…") { model.promptNewBranch(from: branch) }
+                        Button {
+                            model.reviewSheetTarget = .branch(branch)
+                        } label: {
+                            Label("AI review…", systemImage: "sparkle.magnifyingglass")
+                        }
+                        .help("Nechat větev zkontrolovat CLI agentem (Claude, Codex, Cursor, Grok)")
                         Spacer()
                         Button(role: .destructive) { model.branchToDelete = branch } label: {
                             Text(branch.isRemote ? "Smazat na serveru…" : "Smazat…")
@@ -158,6 +165,8 @@ struct BranchDetail: View {
                 }
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+                ReviewsSection(model: model, target: .branch(branch))
 
                 Divider()
 

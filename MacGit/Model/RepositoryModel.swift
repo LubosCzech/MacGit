@@ -104,6 +104,8 @@ final class RepositoryModel {
     /// Dialog pro zadání textu vyvolaný z toolbaru nebo menu.
     var pendingPrompt: TextPrompt?
     var branchToDelete: Branch?
+    /// Cíl (větev/commit), pro který se otevírá dialog AI review.
+    var reviewSheetTarget: ReviewTarget?
     var shelfToDelete: Shelf?
     var busyTitle: String?
     var errorMessage: String?
@@ -117,7 +119,9 @@ final class RepositoryModel {
         self.project = project
         self.store = store
         let url = store.workspaceURL(for: project.id)
-        workspace = (try? JSONDecoder().decode(ProjectWorkspace.self, from: Data(contentsOf: url))) ?? ProjectWorkspace()
+        var loaded = (try? JSONDecoder().decode(ProjectWorkspace.self, from: Data(contentsOf: url))) ?? ProjectWorkspace()
+        ReviewCenter.markInterrupted(&loaded)
+        workspace = loaded
         repository = GitRepository(url: project.url, runner: store.runner, networkContext: store.context(for: project.auth, projectID: project.id))
     }
 

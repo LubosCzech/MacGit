@@ -79,6 +79,9 @@ private struct RepositoryWindow: View {
             SSHUnlockSheet(model: model, request: request)
         }
         .textPrompt($model.pendingPrompt)
+        .sheet(item: $model.reviewSheetTarget) { target in
+            StartReviewSheet(model: model, target: target)
+        }
         .confirmationDialog(
             model.branchToDelete.map { $0.isRemote ? "Smazat větev \($0.name) na serveru?" : "Smazat větev \($0.name)?" } ?? "",
             isPresented: Binding(get: { model.branchToDelete != nil }, set: { if !$0 { model.branchToDelete = nil } }),

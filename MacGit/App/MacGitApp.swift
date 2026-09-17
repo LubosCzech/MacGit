@@ -17,6 +17,12 @@ struct MacGitApp: App {
         .windowToolbarStyle(.unified)
         .commands { MacGitCommands(store: store) }
 
+        WindowGroup("AI review", id: "review", for: ReviewWindowValue.self) { $value in
+            ReviewWindow(value: value)
+                .environment(store)
+        }
+        .defaultSize(width: 900, height: 820)
+
         Settings {
             SettingsView()
                 .environment(store)
@@ -81,6 +87,16 @@ struct MacGitCommands: Commands {
             Divider()
             Button("Nová větev…") { model?.promptNewBranch(from: nil) }
                 .keyboardShortcut("b", modifiers: [.command, .shift])
+            Button(model?.section == .history ? "AI review commitu…" : "AI review větve…") {
+                guard let model else { return }
+                if model.section == .history, let commit = model.selectedCommit {
+                    model.reviewSheetTarget = .commit(commit)
+                } else if let branch = (model.section == .branches ? model.branches.first { $0.id == model.selectedBranchID } : nil)
+                            ?? model.branches.first(where: \.isCurrent) {
+                    model.reviewSheetTarget = .branch(branch)
+                }
+            }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
             if let model, let url = model.pullRequestURL {
                 Button(model.pullRequestTitle + "…") { NSWorkspace.shared.open(url) }
             }

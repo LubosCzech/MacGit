@@ -128,6 +128,72 @@ struct ProjectWorkspace: Codable {
     var excludedPaths: Set<String> = []
     /// Soubory z neaktivních changelistů, které uživatel zaškrtl.
     var includedPaths: Set<String> = []
+    /// Historie AI review větví.
+    var reviews: [ReviewRecord] = []
+
+    init() {}
+
+    /// Tolerantní dekódování – nové klíče chybí ve starších uložených souborech.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = ProjectWorkspace()
+        changelists = try c.decodeIfPresent([Changelist].self, forKey: .changelists) ?? defaults.changelists
+        activeChangelistID = try c.decodeIfPresent(UUID.self, forKey: .activeChangelistID) ?? defaults.activeChangelistID
+        assignments = try c.decodeIfPresent([String: UUID].self, forKey: .assignments) ?? [:]
+        shelves = try c.decodeIfPresent([Shelf].self, forKey: .shelves) ?? []
+        draftMessage = try c.decodeIfPresent(String.self, forKey: .draftMessage) ?? ""
+        excludedPaths = try c.decodeIfPresent(Set<String>.self, forKey: .excludedPaths) ?? []
+        includedPaths = try c.decodeIfPresent(Set<String>.self, forKey: .includedPaths) ?? []
+        reviews = try c.decodeIfPresent([ReviewRecord].self, forKey: .reviews) ?? []
+    }
+}
+
+/// Jedno AI review větve.
+struct ReviewRecord: Identifiable, Codable, Hashable {
+    enum Status: String, Codable {
+        case running, completed, failed, cancelled
+    }
+
+    var id = UUID()
+    var branch: String
+    var baseBranch: String
+    var headCommit: String
+    var agent: AgentKind
+    var model: String?
+    var startedAt = Date()
+    var finishedAt: Date?
+    var status: Status = .running
+    /// Markdown s výstupem agenta (v Caches – dočasné úložiště).
+    var outputPath: String
+    var logPath: String
+    var errorMessage: String?
+    /// Vyplněno u review jednoho commitu (plný hash a předmět).
+    var commitHash: String?
+    var commitSubject: String?
+
+    var modelTitle: String { model.flatMap { $0.isEmpty ? nil : $0 } ?? "výchozí model" }
+    var isCommitReview: Bool { commitHash != nil }
+    /// „větev feature/x“ nebo „commit abc1234“.
+    var targetTitle: String { isCommitReview ? "commit \(headCommit)" : "větev \(branch)" }
+}
+
+/// Co se má zrevidovat.
+enum ReviewTarget: Identifiable, Hashable {
+    case branch(Branch)
+    case commit(Commit)
+
+    var id: String {
+        switch self {
+        case let .branch(branch): "branch:" + branch.id
+        case let .commit(commit): "commit:" + commit.id
+        }
+    }
+}
+
+/// Hodnota pro otevření okna s review.
+struct ReviewWindowValue: Codable, Hashable {
+    var projectID: UUID
+    var reviewID: UUID
 }
 
 struct SSHUnlockRequest: Identifiable {

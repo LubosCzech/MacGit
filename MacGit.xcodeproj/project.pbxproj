@@ -11,7 +11,9 @@
 		2A16C985B9CE599F1DA20F4D /* ChangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B6A51345CE92B3AB14BE0F4 /* ChangesView.swift */; };
 		3A1F42950181B79CBE31A44A /* RepositoryColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = E174CB857B2F297DB964E8C0 /* RepositoryColumns.swift */; };
 		487F80338F1603CFA9AA0C0F /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2249380C1CD83C555D3F6F /* AppStore.swift */; };
+		4B669B5EF49B9E91C1290DB5 /* ReviewCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7FC223C52ACF79E880E48E4 /* ReviewCenter.swift */; };
 		528422AB4950163B81B85334 /* BranchesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3246A422A020A2AA140EB92E /* BranchesView.swift */; };
+		6DE3EDE3C186B58758851920 /* StartReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8358D74DB39ADCDBAA585D29 /* StartReviewSheet.swift */; };
 		787FDDC04270365D105ED66F /* GitKit in Frameworks */ = {isa = PBXBuildFile; productRef = BBAD4A27BE81CBD6F66E2F7A /* GitKit */; };
 		7C5D237FFF5C0D9EC57F09A9 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F8C77B26C7D00A67A7F5720 /* AppModels.swift */; };
 		80219AF6FFFE6AE57F732ED7 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = BABC55CD09B6DF204CB25F52 /* Components.swift */; };
@@ -24,6 +26,7 @@
 		9B439EDCD873840961860722 /* MacGitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1278DA0A41DBADE72C5DE6E7 /* MacGitApp.swift */; };
 		A8275B9B9C5BB06F5DCFD6DE /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA72394C6ACE1CF3160AD101 /* RootView.swift */; };
 		C23DC8B3FD660D82D0D582C5 /* ShelfView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C207793ECDD2EEFBE4CBE611 /* ShelfView.swift */; };
+		CD8CE04324218711544E5080 /* ReviewViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A52DE4ED05BE8CF0750F151 /* ReviewViews.swift */; };
 		DAACE9655694499F50868D1F /* AuthEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19B0286641D41FB21915665E /* AuthEditor.swift */; };
 		DFE6A650A99B10B31E3F2299 /* RepositoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25782B6957A86E0AFA519E75 /* RepositoryModel.swift */; };
 		E25B4A6A241A39802D7503AE /* DebugSnapshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7C6CAAB4B97F37F46C1525 /* DebugSnapshots.swift */; };
@@ -40,6 +43,7 @@
 		1278DA0A41DBADE72C5DE6E7 /* MacGitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacGitApp.swift; sourceTree = "<group>"; };
 		19B0286641D41FB21915665E /* AuthEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthEditor.swift; sourceTree = "<group>"; };
 		25782B6957A86E0AFA519E75 /* RepositoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryModel.swift; sourceTree = "<group>"; };
+		2A52DE4ED05BE8CF0750F151 /* ReviewViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewViews.swift; sourceTree = "<group>"; };
 		2B6A51345CE92B3AB14BE0F4 /* ChangesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChangesView.swift; sourceTree = "<group>"; };
 		2F8C77B26C7D00A67A7F5720 /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
 		3246A422A020A2AA140EB92E /* BranchesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchesView.swift; sourceTree = "<group>"; };
@@ -48,10 +52,12 @@
 		71EBF7BE8BB506D3C840704A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7B7C6CAAB4B97F37F46C1525 /* DebugSnapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugSnapshots.swift; sourceTree = "<group>"; };
 		7EE2BA5891FF9B9C72E531BD /* GitKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GitKit; path = Packages/GitKit; sourceTree = SOURCE_ROOT; };
+		8358D74DB39ADCDBAA585D29 /* StartReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartReviewSheet.swift; sourceTree = "<group>"; };
 		8BCD092AF3337856C5088BA5 /* MacGit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacGit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8C7209449385B3CB2FDF3B8B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9C2249380C1CD83C555D3F6F /* AppStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStore.swift; sourceTree = "<group>"; };
 		9DF3A26D6D31B36538BFA922 /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
+		A7FC223C52ACF79E880E48E4 /* ReviewCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCenter.swift; sourceTree = "<group>"; };
 		BA72394C6ACE1CF3160AD101 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		BABC55CD09B6DF204CB25F52 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
 		C207793ECDD2EEFBE4CBE611 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
@@ -172,6 +178,7 @@
 				DD7D571578383236105585B8 /* CommitMessageGenerator.swift */,
 				61A0BD53FFB494757CD42D6D /* Keychain.swift */,
 				DEB878A2140B4C1C1DB321BF /* RepositoryWatcher.swift */,
+				A7FC223C52ACF79E880E48E4 /* ReviewCenter.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -218,6 +225,7 @@
 				02FA34364C5492BA29F3C244 /* Changes */,
 				3F5205EBDFF1ED88893DBFE3 /* Inspector */,
 				1DD93E54EC7CF632C8378EA0 /* Repository */,
+				FCC78659E83FA23B7A196A84 /* Review */,
 				A412B3096BCD5211597E6728 /* Settings */,
 				9E54CEA0483FD0911A879665 /* Sheets */,
 				1B405DFD5B541AF8D73789D8 /* Shelf */,
@@ -248,6 +256,15 @@
 				EB200A52A61FED870B3C0EBE /* SidebarView.swift */,
 			);
 			path = Sidebar;
+			sourceTree = "<group>";
+		};
+		FCC78659E83FA23B7A196A84 /* Review */ = {
+			isa = PBXGroup;
+			children = (
+				2A52DE4ED05BE8CF0750F151 /* ReviewViews.swift */,
+				8358D74DB39ADCDBAA585D29 /* StartReviewSheet.swift */,
+			);
+			path = Review;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -345,11 +362,14 @@
 				DFE6A650A99B10B31E3F2299 /* RepositoryModel.swift in Sources */,
 				8DCD29DE08052C328DCB051B /* RepositorySheets.swift in Sources */,
 				8B27DC5AF88C7D4A53C0ABD6 /* RepositoryWatcher.swift in Sources */,
+				4B669B5EF49B9E91C1290DB5 /* ReviewCenter.swift in Sources */,
+				CD8CE04324218711544E5080 /* ReviewViews.swift in Sources */,
 				A8275B9B9C5BB06F5DCFD6DE /* RootView.swift in Sources */,
 				9025144D8E2F254D8AB892DF /* SSHUnlockSheet.swift in Sources */,
 				972C69BE48FA358F73A19697 /* SettingsView.swift in Sources */,
 				C23DC8B3FD660D82D0D582C5 /* ShelfView.swift in Sources */,
 				EC03477520C1D05BBEC8FBB9 /* SidebarView.swift in Sources */,
+				6DE3EDE3C186B58758851920 /* StartReviewSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

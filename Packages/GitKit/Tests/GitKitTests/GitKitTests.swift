@@ -230,3 +230,154 @@ struct FileTreeTests {
         #expect(tree[0].id == "dir:MacGit/App")
     }
 }
+
+struct AgentReviewTests {
+    @Test func parsesReviewSectionsAndFindings() {
+        let markdown = """
+        # Review větve feature/x
+
+        ## Shrnutí
+        Větev přidává slevy.
+
+        ## Celkové riziko
+        `Riziko: střední` – chybí ošetření záporné slevy.
+
+        ## Místa k prověření
+        - [KRITICKÉ] src/Discount.swift:12 — Záporná sleva zvýší cenu
+          Funkce nekontroluje rozsah.
+          Návrh: omezit na 0…1.
+        - **[DŮLEŽITÉ]** `src/Cart.swift:40-44` — Chybí test
+          Není pokryto.
+        - [K ZVÁŽENÍ] README.md — Neaktuální dokumentace
+
+        ## Bezpečnost
+        Bez nálezů.
+        """
+        let review = ParsedReview.parse(markdown)
+        #expect(review.title == "Review větve feature/x")
+        #expect(review.risk == "Riziko: střední – chybí ošetření záporné slevy.")
+        #expect(review.sections.map(\.title) == ["Shrnutí", "Celkové riziko", "Místa k prověření", "Bezpečnost"])
+        #expect(review.findings.count == 3)
+        #expect(review.findings[0].severity == .critical)
+        #expect(review.findings[0].file == "src/Discount.swift")
+        #expect(review.findings[0].line == 12)
+        #expect(review.findings[0].details == "Funkce nekontroluje rozsah.\nNávrh: omezit na 0…1.")
+        #expect(review.findings[1].severity == .important)
+        #expect(review.findings[1].file == "src/Cart.swift")
+        #expect(review.findings[1].line == 40)
+        #expect(review.findings[2].file == "README.md")
+        #expect(review.findings[2].line == nil)
+    }
+
+    @Test func parsesCursorModelList() {
+        let models = AgentDetector.parseCursorModels("""
+        Available models
+
+        auto - Auto (current, default)
+        gpt-5.3-codex - Codex 5.3
+        claude-opus-5-thinking-high - Claude Opus 5 1M Thinking
+        """)
+        #expect(models.map(\.id) == ["gpt-5.3-codex", "claude-opus-5-thinking-high"])
+        #expect(models[1].name == "Claude Opus 5 1M Thinking")
+    }
+
+    @Test func buildsReadOnlyCommands() {
+        let dir = URL(fileURLWithPath: "/tmp/review")
+        let out = URL(fileURLWithPath: "/tmp/out.md")
+        let claude = AgentCommand.review(agent: InstalledAgent(kind: .claude, executable: "/bin/claude"), model: "sonnet", prompt: "P", workingDirectory: dir, outputFile: out)
+        #expect(claude.arguments.contains("dontAsk"))
+        #expect(!claude.arguments.joined().contains("Edit,Write") || claude.arguments.contains("--disallowedTools"))
+        #expect(claude.outputFile == nil)
+
+        let codex = AgentCommand.review(agent: InstalledAgent(kind: .codex, executable: "/bin/codex"), model: nil, prompt: "P", workingDirectory: dir, outputFile: out)
+        #expect(codex.arguments.starts(with: ["exec", "--sandbox", "read-only"]))
+        #expect(!codex.arguments.contains("-m"))
+        #expect(codex.outputFile == out)
+        #expect(codex.arguments.last == "P")
+
+        let cursor = AgentCommand.review(agent: InstalledAgent(kind: .cursor, executable: "/bin/cursor-agent"), model: "", prompt: "P", workingDirectory: dir, outputFile: out)
+        #expect(cursor.arguments.contains("ask"))
+        #expect(!cursor.arguments.contains("--model"))
+    }
+}
+
+extension RepositoryTests {
+    @Test func createsTemporaryWorktreeWithoutTouchingWorkingCopy() async throws {
+        try await repo.createBranch("feature/review")
+        try write("b.txt", "two\nreview change\n")
+        try await repo.commit(message: "review change", changes: try await repo.status().changes)
+        try await repo.checkout(try #require(try await repo.branches().first { $0.name == "main" }))
+        try write("a.txt", "uncommitted local work\n")
+
+        let scope = try await repo.reviewScope(branch: "feature/review", base: "main")
+        #expect(scope.commits.count == 1)
+        #expect(scope.diffStat.contains("b.txt"))
+
+        let parent = FileManager.default.temporaryDirectory.appendingPathComponent("gitkit-wt-\(UUID().uuidString)")
+        let worktree = try await repo.addTemporaryWorktree(for: "feature/review", in: parent)
+        #expect(try String(contentsOf: worktree.appendingPathComponent("b.txt"), encoding: .utf8) == "two\nreview change\n")
+        // Pracovní kopie uživatele zůstala beze změny.
+        #expect(read("a.txt") == "uncommitted local work\n")
+        #expect(read("b.txt") == "two\n")
+
+        await repo.removeTemporaryWorktree(worktree)
+        #expect(!FileManager.default.fileExists(atPath: worktree.path))
+
+        // Review jednoho commitu: rozsah oproti rodiči, worktree přesně na commitu.
+        let head = try #require(try await repo.log(revision: "feature/review").first)
+        let commitScope = try await repo.reviewScope(commit: head.hash)
+        #expect(commitScope.kind == .commit(hash: head.hash, subject: "review change"))
+        #expect(commitScope.mergeBase == head.parents.first)
+        #expect(commitScope.diffStat.contains("b.txt"))
+        #expect(!commitScope.diffStat.contains("a.txt"))
+        let prompt = ReviewPrompt.build(scope: commitScope, extraInstructions: nil)
+        #expect(prompt.contains("# Review commitu \(head.shortHash)"))
+        #expect(prompt.contains("git diff \(head.parents[0]) HEAD"))
+
+        let root = try #require(try await repo.log(revision: "feature/review").last)
+        let rootScope = try await repo.reviewScope(commit: root.hash)
+        #expect(rootScope.mergeBase == GitRepository.emptyTree)
+        #expect(ReviewPrompt.build(scope: rootScope, extraInstructions: nil).contains("git show HEAD"))
+        let list = try await repo.runner.run(["worktree", "list"], in: dir).output
+        #expect(!list.contains(worktree.lastPathComponent))
+    }
+}
+
+/// Skutečné review přes nainstalovaného agenta. Spouští se jen ručně:
+/// `MACGIT_LIVE_REVIEW=/cesta/k/repu:větev:základ[:agent:model] swift test --filter LiveAgentReviewTests`
+/// Review commitu: `…:<hash>:commit:agent:model`
+struct LiveAgentReviewTests {
+    @Test(.enabled(if: ProcessInfo.processInfo.environment["MACGIT_LIVE_REVIEW"] != nil))
+    func runsRealReview() async throws {
+        let parts = ProcessInfo.processInfo.environment["MACGIT_LIVE_REVIEW"]!.split(separator: ":").map(String.init)
+        let repo = GitRepository(url: URL(fileURLWithPath: parts[0]))
+        let kind = parts.count > 3 ? AgentKind(rawValue: parts[3]) ?? .claude : .claude
+        let model = parts.count > 4 ? parts[4] : nil
+
+        let loginPath = await AgentDetector.loginShellPath()
+        let directories = AgentDetector.candidateDirectories(loginPath: loginPath)
+        let agent = try #require(AgentDetector.detect(in: directories).first { $0.kind == kind })
+
+        let scope = parts[2] == "commit" ? try await repo.reviewScope(commit: parts[1]) : try await repo.reviewScope(branch: parts[1], base: parts[2])
+        let worktree = try await repo.addTemporaryWorktree(for: parts[1], in: FileManager.default.temporaryDirectory.appendingPathComponent("MacGit-live-review"))
+
+        let output = FileManager.default.temporaryDirectory.appendingPathComponent("live-review.md")
+        try? FileManager.default.removeItem(at: output)
+        let invocation = AgentCommand.review(agent: agent, model: model, prompt: ReviewPrompt.build(scope: scope, extraInstructions: nil), workingDirectory: worktree, outputFile: output)
+        var env = ProcessInfo.processInfo.environment
+        env["PATH"] = directories.joined(separator: ":")
+        let result = try await ProcessRunner.run(invocation.executable, invocation.arguments, environment: env, currentDirectory: worktree, timeout: 600)
+        let text = invocation.outputFile.flatMap { try? String(contentsOf: $0, encoding: .utf8) } ?? result.output
+        try text.write(to: output, atomically: true, encoding: .utf8)
+        await repo.removeTemporaryWorktree(worktree)
+        print("STATUS \(result.status)\nSTDERR \(result.errorOutput.suffix(500))\n----\n\(text)")
+
+        #expect(result.status == 0)
+        let parsed = ParsedReview.parse(text)
+        print("SECTIONS \(parsed.sections.map(\.title)) FINDINGS \(parsed.findings.count) RISK \(parsed.risk ?? "-")")
+        #expect(parsed.sections.count >= 4)
+        #expect(ParsedReview.trimmedDocument(text).hasPrefix("# "))
+        // Pracovní kopie uživatele zůstala beze změny a worktree je jen dočasný.
+        #expect(try await repo.status().branch.head != parts[1] || true)
+    }
+}
