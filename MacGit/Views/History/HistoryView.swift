@@ -135,7 +135,7 @@ struct CommitDetail: View {
 
     var body: some View {
         if model.selectedCommit != nil {
-            VSplitView {
+            ResizableSplit(id: "commitFiles") {
                 List(model.commitFiles, selection: $model.selectedCommitFileID) { file in
                     HStack(spacing: 6) {
                         FileNameLabel(path: file.path, originalPath: file.originalPath, isDeleted: file.kind == .deleted)
@@ -144,10 +144,8 @@ struct CommitDetail: View {
                     }
                     .tag(file.id)
                 }
-                .frame(minHeight: 90, idealHeight: 170, maxHeight: 360)
-
+            } bottom: {
                 DiffView(diff: model.commitDiff, placeholder: "Vyber soubor", placeholderMessage: nil)
-                    .frame(minHeight: 200, maxHeight: .infinity)
             }
         } else {
             EmptyStateView(title: "Vyber commit", symbol: "clock", message: "Soubory a rozdíly commitu se zobrazí tady.")

@@ -221,3 +221,47 @@ extension NSPasteboard {
         general.setString(string, forType: .string)
     }
 }
+
+/// Svislé rozdělení s tažitelným dělítkem. Náhrada za `VSplitView`, který se při
+/// proměnlivé minimální velikosti obsahu zacyklí v rozložení a shodí aplikaci.
+struct ResizableSplit<Top: View, Bottom: View>: View {
+    @AppStorage private var topHeight: Double
+    private let range: ClosedRange<Double>
+    @ViewBuilder var top: Top
+    @ViewBuilder var bottom: Bottom
+    @State private var dragStart: Double?
+
+    init(id: String, defaultHeight: Double = 170, range: ClosedRange<Double> = 80...480,
+         @ViewBuilder top: () -> Top, @ViewBuilder bottom: () -> Bottom) {
+        _topHeight = AppStorage(wrappedValue: defaultHeight, "splitHeight.\(id)")
+        self.range = range
+        self.top = top()
+        self.bottom = bottom()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            top
+                .frame(height: min(max(topHeight, range.lowerBound), range.upperBound))
+            Divider()
+                .overlay {
+                    Color.clear
+                        .frame(height: 8)
+                        .contentShape(Rectangle())
+                        .pointerStyle(.frameResize(position: .top))
+                        .gesture(
+                            DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                                .onChanged { value in
+                                    let start = dragStart ?? topHeight
+                                    dragStart = start
+                                    topHeight = min(max(start + value.translation.height, range.lowerBound), range.upperBound)
+                                }
+                                .onEnded { _ in dragStart = nil }
+                        )
+                        .accessibilityHidden(true)
+                }
+            bottom
+                .frame(maxHeight: .infinity)
+        }
+    }
+}

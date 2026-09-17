@@ -73,6 +73,18 @@ struct DiffView: View {
 // MARK: - Layout
 
 enum DiffLayout {
+    /// Extrémně dlouhé řádky (minifikované soubory) se zkracují, jinak by rozbily rozložení.
+    static let maxDisplayedCharacters = 1_000
+
+    static func displayText(_ text: AttributedString) -> AttributedString {
+        guard text.characters.count > maxDisplayedCharacters else { return text }
+        let end = text.characters.index(text.startIndex, offsetBy: maxDisplayedCharacters)
+        var shortened = AttributedString(text[text.startIndex..<end])
+        var suffix = AttributedString(" … (řádek zkrácen)")
+        suffix.foregroundColor = .secondary
+        shortened.append(suffix)
+        return shortened
+    }
     struct UnifiedRow: Identifiable {
         enum Kind { case hunk, context, addition, deletion, meta }
         let id: Int
@@ -233,7 +245,14 @@ private func diffBackground(for kind: DiffLayout.UnifiedRow.Kind) -> Color {
 
 private struct UnifiedDiffContent: View {
     let rows: [DiffLayout.UnifiedRow]
-    @State private var viewportWidth: CGFloat = 640
+    private let contentWidth: CGFloat
+
+    init(rows: [DiffLayout.UnifiedRow]) {
+        self.rows = rows
+        // Šířka obsahu z nejdelšího řádku (neproporcionální písmo) – bez zpětné vazby z rozložení okna.
+        let longest = rows.lazy.map { min($0.text.characters.count, DiffLayout.maxDisplayedCharacters) }.max() ?? 0
+        contentWidth = CGFloat(longest) * 7.3 + 46 + 46 + 22 + 32
+    }
 
     var body: some View {
         ScrollView([.vertical, .horizontal]) {
@@ -243,8 +262,9 @@ private struct UnifiedDiffContent: View {
                         Text(row.text)
                             .font(.system(size: 11, design: .monospaced))
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                             .padding(.leading, 16)
-                            .frame(minWidth: viewportWidth, minHeight: 26, alignment: .leading)
+                            .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
                             .background(diffBackground(for: .hunk))
                     } else {
                         HStack(spacing: 0) {
@@ -257,20 +277,21 @@ private struct UnifiedDiffContent: View {
                             Text(row.kind == .addition ? "+" : row.kind == .deletion ? "−" : "")
                                 .frame(width: 22)
                                 .foregroundStyle(row.kind == .addition ? .green : .red)
-                            Text(row.text)
+                            Text(DiffLayout.displayText(row.text))
                                 .foregroundStyle(row.kind == .meta ? .secondary : .primary)
+                                .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
                             Spacer(minLength: 16)
                         }
                         .font(diffFont)
-                        .frame(minWidth: viewportWidth, minHeight: 20, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: 20, alignment: .leading)
                         .background(diffBackground(for: row.kind))
                     }
                 }
             }
+            .containerRelativeFrame(.horizontal, alignment: .leading) { viewport, _ in max(viewport, contentWidth) }
             .padding(.bottom, 24)
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { viewportWidth = $0 }
         .textSelection(.enabled)
     }
 }
@@ -309,7 +330,7 @@ private struct SplitDiffContent: View {
             Text(side.map { String($0.line) } ?? "")
                 .frame(width: 46, alignment: .trailing)
                 .foregroundStyle(.tertiary)
-            Text(side?.text ?? "")
+            Text(side.map { DiffLayout.displayText($0.text) } ?? "")
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .padding(.leading, 12)

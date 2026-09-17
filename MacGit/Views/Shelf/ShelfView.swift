@@ -82,13 +82,12 @@ struct ShelfDetail: View {
 
                 Divider()
 
-                VSplitView {
+                ResizableSplit(id: "shelfFiles", defaultHeight: 160) {
                     List(shelf.files, id: \.self, selection: $selectedFile) { path in
                         FileNameLabel(path: path).tag(path)
                     }
-                    .frame(minHeight: 90, idealHeight: 160, maxHeight: 320)
+                } bottom: {
                     DiffView(diff: selectedFile.flatMap { diffs[$0] }, placeholder: "Vyber soubor", placeholderMessage: nil)
-                        .frame(minHeight: 200, maxHeight: .infinity)
                 }
             }
             .onChange(of: shelf.id, initial: true) { selectedFile = shelf.files.first }
