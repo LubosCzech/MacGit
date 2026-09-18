@@ -30,7 +30,7 @@ struct AuthEditor: View {
             }
         }
 
-        if let warning { Label(warning, systemImage: "exclamationmark.triangle").foregroundStyle(.orange).font(.callout) }
+        if let warning { Label(warning, systemImage: "exclamationmark.triangle").foregroundStyle(Theme.warning).font(.callout) }
 
         switch auth {
         case .system:

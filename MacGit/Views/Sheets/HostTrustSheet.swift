@@ -38,7 +38,7 @@ struct HostTrustSheet: View {
                         HStack { ProgressView().controlSize(.small); Text("Načítám otisky…").foregroundStyle(.secondary) }
                     } else if keys.isEmpty {
                         Label(error ?? "Server nevrátil žádné klíče.", systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Theme.warning)
                     } else {
                         Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 6) {
                             ForEach(keys) { key in

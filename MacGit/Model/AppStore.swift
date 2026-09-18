@@ -35,6 +35,8 @@ final class AppStore {
         didSet { UserDefaults.standard.set(inspectorShown, forKey: "inspectorShown") }
     }
     var globalError: String?
+    /// ⌘K z menu – každé zvýšení přesune fokus do filtru v postranním panelu.
+    var sidebarSearchFocusRequests = 0
 
     enum SheetKind: Identifiable, Hashable {
         case clone, addExisting, newRepository, newSpace

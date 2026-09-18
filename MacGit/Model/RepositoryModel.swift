@@ -45,14 +45,23 @@ final class RepositoryModel {
     }
 
     enum InspectorTab: String, CaseIterable, Identifiable {
-        case file, commit, repository
+        case file, commit, review, repository
         var id: String { rawValue }
         var title: String {
             switch self {
             case .file: "Soubor"
             case .commit: "Commit"
+            case .review: "Review"
             case .repository: "Repozitář"
             }
+        }
+    }
+
+    /// Záložky inspektoru jsou kontextové: podle sekce se první z nich mění mezi souborem a commitem.
+    var inspectorTabs: [InspectorTab] {
+        switch section {
+        case .changes, .shelf: [.file, .review, .repository]
+        case .history, .branches: [.commit, .review, .repository]
         }
     }
 
@@ -64,17 +73,17 @@ final class RepositoryModel {
     var section: Section = .changes {
         didSet {
             guard oldValue != section else { return }
-            switch section {
-            case .changes: if inspectorTab == .commit { inspectorTab = .file }
-            case .history: if inspectorTab == .file { inspectorTab = .commit }
-            default: break
-            }
+            if !inspectorTabs.contains(inspectorTab) { inspectorTab = inspectorTabs[0] }
             if section == .history { Task { await loadHistory() } }
+            // Prázdné hledání se při přepnutí sekce sbalí zpátky do orbu.
+            if searchText.isEmpty { isSearchExpanded = false }
         }
     }
     var inspectorTab: InspectorTab = .file
     /// Filtr z vyhledávacího pole v toolbaru – platí pro aktuální sekci.
     var searchText = ""
+    /// Rozbalené hledání v toolbaru (jinak je z něj jen skleněný orb).
+    var isSearchExpanded = false
     var selectedChangePaths: Set<String> = [] {
         didSet { selectedChangePath = selectedChangePaths.count == 1 ? selectedChangePaths.first : nil }
     }

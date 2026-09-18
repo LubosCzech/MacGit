@@ -82,8 +82,8 @@ private struct ReviewRow: View {
     @ViewBuilder private var statusIcon: some View {
         switch review.status {
         case .running: ProgressView().controlSize(.small)
-        case .completed: Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-        case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+        case .completed: Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.success)
+        case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(Theme.warning)
         case .cancelled: Image(systemName: "stop.circle").foregroundStyle(.secondary)
         }
     }
@@ -365,9 +365,9 @@ extension ReviewFinding.Severity {
 
     var color: Color {
         switch self {
-        case .critical: .red
-        case .important: .orange
-        case .consider: .blue
+        case .critical: Theme.statusDeleted
+        case .important: Theme.warning
+        case .consider: Theme.info
         }
     }
 }

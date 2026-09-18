@@ -7,19 +7,15 @@ struct InspectorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Picker("Inspektor", selection: $model.inspectorTab) {
-                ForEach(RepositoryModel.InspectorTab.allCases) { Text($0.title).tag($0) }
+            RevisionTabPicker(values: model.inspectorTabs, selection: $model.inspectorTab) { tab in
+                Text(tab.title).lineLimit(1)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-
-            Divider()
+            .padding(12)
 
             switch model.inspectorTab {
             case .file: FileInspector(model: model)
             case .commit: CommitInspector(model: model)
+            case .review: ReviewInspector(model: model)
             case .repository: RepositoryInspector(model: model)
             }
         }
@@ -33,14 +29,30 @@ private struct FileInspector: View {
         if let change = model.selectedChange {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: 10) {
-                        FileIcon(path: change.path, size: 32)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(change.fileName)
-                                .font(.headline)
-                                .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            FileIcon(path: change.path, size: 26)
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(change.fileName)
+                                    .font(.system(size: 13.5, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+                                    .lineLimit(2)
+                                Text(change.directory.isEmpty ? "/" : change.directory)
+                                    .font(.system(size: 10.5))
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .lineLimit(1).truncationMode(.middle)
+                            }
+                        }
+
+                        HStack(spacing: 8) {
+                            StatusLetter(kind: change.kind)
                             Text(change.kind.title)
-                                .foregroundStyle(change.kind.color)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Theme.textSecondary)
+                        }
+
+                        if let diff = model.currentDiff, diff.path == change.path, !diff.isBinary {
+                            DiffStatBar(additions: diff.additions, deletions: diff.deletions)
                         }
                     }
                     .padding(16)
@@ -81,12 +93,18 @@ private struct FileInspector: View {
                     Divider()
 
                     InspectorSection(title: "Akce") {
-                        HStack {
-                            Button("Zobrazit ve Finderu") { model.revealInFinder(change.path) }
-                            Button("Otevřít") { NSWorkspace.shared.open(model.project.url.appendingPathComponent(change.path)) }
+                        Button { model.revealInFinder(change.path) } label: {
+                            Label("Zobrazit ve Finderu", systemImage: "folder")
+                                .frame(maxWidth: .infinity)
                         }
-                        Button("Odložit do shelfu…") { model.promptShelve([change], suggestedName: change.fileName) }
+                        HStack {
+                            Button("Otevřít") { NSWorkspace.shared.open(model.project.url.appendingPathComponent(change.path)) }
+                                .frame(maxWidth: .infinity)
+                            Button("Odložit…") { model.promptShelve([change], suggestedName: change.fileName) }
+                                .frame(maxWidth: .infinity)
+                        }
                     }
+                    .buttonStyle(.glass)
                 }
             }
         } else {

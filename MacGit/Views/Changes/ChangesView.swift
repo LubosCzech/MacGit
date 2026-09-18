@@ -28,6 +28,8 @@ struct ChangesList: View {
                                 ChangeRow(model: model, change: change)
                                     .tag(change.path)
                                     .draggable(change.path)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(EdgeInsets(top: 1, leading: 10, bottom: 1, trailing: 10))
                             }
                         }
                     } header: {
@@ -65,6 +67,7 @@ struct ChangesList: View {
                 CommitComposer(model: model)
             }
         }
+        .scrollEdgeEffectStyle(.soft, for: .top)
         .confirmationDialog(
             pendingDiscard.count == 1 ? "Zahodit změny v souboru \(pendingDiscard[0].fileName)?" : "Zahodit změny v \(pendingDiscard.count) souborech?",
             isPresented: Binding(get: { !pendingDiscard.isEmpty }, set: { if !$0 { pendingDiscard = [] } })
@@ -113,7 +116,7 @@ private struct ChangeRow: View {
     var showsDirectory = true
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 9) {
             Toggle("Zahrnout do commitu", isOn: Binding(
                 get: { model.isIncluded(change) },
                 set: { model.setIncluded($0, for: [change]) }
@@ -121,10 +124,31 @@ private struct ChangeRow: View {
             .toggleStyle(.checkbox)
             .labelsHidden()
 
-            FileNameLabel(path: change.path, originalPath: change.originalPath, isDeleted: change.kind == .deleted, showsDirectory: showsDirectory)
+            FileIcon(path: change.path, size: 17)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(change.fileName)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(model.isIncluded(change) ? Theme.textPrimary : Theme.textSecondary)
+                    .strikethrough(change.kind == .deleted)
+                    .lineLimit(1)
+                if showsDirectory && !change.directory.isEmpty {
+                    Text(change.directory)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1).truncationMode(.middle)
+                }
+                if let original = change.originalPath {
+                    Text("← " + original)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(1).truncationMode(.middle)
+                }
+            }
             Spacer(minLength: 4)
             StatusLetter(kind: change.kind)
         }
+        // Ve stromu je řádek jednořádkový – stejně vysoký jako řádek složky.
+        .padding(.vertical, showsDirectory ? 6 : 2)
         .help(change.path)
     }
 }
@@ -148,17 +172,21 @@ private struct ChangelistHeader: View {
             .disabled(changes.isEmpty)
 
             Text(changelist.name)
-                .foregroundStyle(.primary)
+                .font(.system(size: 11.5, weight: .semibold))
+                .foregroundStyle(Theme.textPrimary)
             if isActive {
                 Text("aktivní")
-                    .foregroundStyle(.tint)
-                    .fontWeight(.regular)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Theme.accentText)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(Theme.tintedFill(Theme.accent), in: .capsule)
             }
             Spacer()
-            Text("\(changes.count)")
-                .foregroundStyle(.secondary)
-                .fontWeight(.regular)
-                .monospacedDigit()
+            Text("\(changes.count) souborů")
+                .font(.system(size: 11).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
+                .contentTransition(.numericText())
             Menu {
                 Button("Nastavit jako aktivní") { model.setActive(changelist) }
                     .disabled(isActive)
@@ -225,6 +253,7 @@ private struct FileTreeRows: View {
                 ChangeRow(model: model, change: change, showsDirectory: false)
                     .tag(change.path)
                     .draggable(change.path)
+                    .listRowSeparator(.hidden)
             } else {
                 // Velké složky (typicky build výstupy) jsou ve výchozím stavu sbalené.
                 let expandedByDefault = node.fileCount <= Self.autoCollapseThreshold
@@ -236,9 +265,10 @@ private struct FileTreeRows: View {
                 )) {
                     FileTreeRows(model: model, nodes: node.children, toggled: $toggled, discard: discard)
                 } label: {
+                    // Řádek složky nemá tag, takže se nedá vybrat – výběr souborů pod ním ale musí fungovat.
                     FolderRow(model: model, node: node, discard: discard)
                 }
-                .selectionDisabled()
+                .listRowSeparator(.hidden)
             }
         }
     }
@@ -264,15 +294,18 @@ private struct FolderRow: View {
             .labelsHidden()
 
             Image(systemName: "folder.fill")
-                .foregroundStyle(.tint)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.accent)
                 .accessibilityHidden(true)
             Text(node.name)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 4)
             Text("\(node.fileCount)")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .font(.system(size: 11).monospacedDigit())
+                .foregroundStyle(Theme.textSecondary)
         }
         .help(node.path)
         .contextMenu {
@@ -302,7 +335,7 @@ private struct GitignoreBanner: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "doc.badge.gearshape")
                 .font(.title3)
-                .foregroundStyle(.orange)
+                .foregroundStyle(Theme.warning)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 6) {
                 Text("Repozitář nemá .gitignore")
@@ -317,7 +350,8 @@ private struct GitignoreBanner: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(.orange.opacity(0.08))
-        .overlay(alignment: .bottom) { Divider() }
+        .glassEffect(.regular.tint(Theme.warning.opacity(0.22)), in: .rect(cornerRadius: 14))
+        .padding(.horizontal, 10)
+        .padding(.bottom, 8)
     }
 }

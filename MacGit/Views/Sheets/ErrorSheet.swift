@@ -20,7 +20,7 @@ struct ErrorSheet: View {
             HStack(alignment: .top, spacing: 14) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.system(size: 28))
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Theme.warning)
                     .frame(width: 40)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {

@@ -19,7 +19,9 @@ Nativní git klient pro macOS 26+ (SwiftUI, Liquid Glass), české UI. Dříve p
 ## Značka
 
 Logo, ikona a paleta jsou v `Design/` (`Logo.png`, `AppIcon-source.png`, `ColorPalette.png`).
-Akcentová barva aplikace je Primary Blue `#197BFF` (v tmavém režimu `#4C9DFF`), celá paleta je v `MacGit/Views/Components/Brand.swift`.
+Akcentová barva aplikace je Primary Blue `#197BFF` (v tmavém režimu `#4C9DFF`); syrová paleta je v `MacGit/Views/Components/Brand.swift`.
+
+Vzhled řídí sémantické tokeny v `MacGit/Views/Components/Theme.swift` – každý se sám překlápí mezi světlým a tmavým tématem (dynamická `NSColor`), takže v pohledech není žádné větvení podle schématu. Sklo (Liquid Glass) patří jen do ovládací vrstvy, obsah (diff, seznamy) zůstává neprůhledný. Kompletní návrh UI/UX je v `Design/UI-Spec.md`.
 
 ## Struktura
 

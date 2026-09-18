@@ -42,21 +42,20 @@ struct BranchesList: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             HStack {
-                Button {
-                    model.promptNewBranch(from: model.branches.first { $0.id == model.selectedBranchID })
-                } label: {
-                    Image(systemName: "plus")
+                GlassEffectContainer {
+                    Button {
+                        model.promptNewBranch(from: model.branches.first { $0.id == model.selectedBranchID })
+                    } label: {
+                        Label("Nová větev", systemImage: "plus")
+                    }
+                    .buttonStyle(.glass)
+                    .help("Nová větev… (⇧⌘B)")
                 }
-                .buttonStyle(.borderless)
-                .help("Nová větev…")
-                .accessibilityLabel("Nová větev")
                 Spacer()
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.bar)
-            .overlay(alignment: .top) { Divider() }
+            .padding(12)
         }
+        .scrollEdgeEffectStyle(.soft, for: .bottom)
         .onAppear {
             if model.selectedBranchID == nil { model.selectedBranchID = model.branches.first(where: \.isCurrent)?.id }
         }

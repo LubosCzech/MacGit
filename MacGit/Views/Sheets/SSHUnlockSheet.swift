@@ -65,7 +65,7 @@ struct SSHUnlockSheet: View {
 
             if let error {
                 Label(error, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Theme.statusDeleted)
             }
 
             DisclosureGroup("Podrobnosti chyby") {

@@ -2,8 +2,20 @@ import SwiftUI
 import GitKit
 
 struct SettingsView: View {
+    @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
     var body: some View {
         TabView {
+            Tab("Vzhled", systemImage: "circle.lefthalf.filled") {
+                Form {
+                    Section("Revision") {
+                        Picker("Vzhled aplikace", selection: $appearance) {
+                            ForEach(RevisionAppearance.allCases) { Text($0.title).tag($0) }
+                        }
+                        Text("Průhlednost a pohyb respektují nastavení zpřístupnění macOS.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
+                }.formStyle(.grouped)
+            }
             Tab("Prostory", systemImage: "square.grid.2x2") { SpacesSettings() }
             Tab("Účty", systemImage: "person.crop.circle") { AccountsSettings() }
             Tab("SSH klíče", systemImage: "key") { SSHKeysSettings() }
@@ -118,7 +130,7 @@ struct SpaceEditor: View {
                                 .padding(4)
                         }
                         .buttonStyle(.plain)
-                        .overlay(Circle().strokeBorder(.separator))
+                        .glassEffect(.regular.interactive(), in: .circle)
                     }
                 }
             }
@@ -231,7 +243,7 @@ private struct AddAccountSheet: View {
                 Link("Vytvořit token…", destination: tokenURL)
             }
             if let error {
-                Label(error, systemImage: "xmark.octagon").foregroundStyle(.red)
+                Label(error, systemImage: "xmark.octagon").foregroundStyle(Theme.statusDeleted)
             }
         }
         .formStyle(.grouped)
@@ -377,7 +389,7 @@ private struct GenerateKeySheet: View {
             TextField("Soubor v ~/.ssh", text: $name)
             TextField("Komentář", text: $comment)
             SecureField("Passphrase (volitelné)", text: $passphrase)
-            if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(.red) }
+            if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(Theme.statusDeleted) }
         }
         .formStyle(.grouped)
         .safeAreaInset(edge: .bottom) {
@@ -437,7 +449,7 @@ private struct GitSettings: View {
         .formStyle(.grouped)
         .safeAreaInset(edge: .bottom) {
             HStack {
-                if saved { Label("Uloženo", systemImage: "checkmark").foregroundStyle(.green) }
+                if saved { Label("Uloženo", systemImage: "checkmark").foregroundStyle(Theme.success) }
                 Spacer()
                 Button("Uložit") {
                     Task {

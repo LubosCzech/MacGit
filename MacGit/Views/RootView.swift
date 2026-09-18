@@ -2,7 +2,6 @@ import SwiftUI
 
 struct RootView: View {
     @Environment(AppStore.self) private var store
-    @State private var columnVisibility = NavigationSplitViewVisibility.all
 
     private var model: RepositoryModel? {
         store.project(store.selectedProjectID).map(store.model(for:))
@@ -13,17 +12,10 @@ struct RootView: View {
 
         Group {
             if let model {
-                RepositoryWindow(model: model, columnVisibility: $columnVisibility, inspectorShown: $store.inspectorShown)
+                RepositoryWindow(model: model)
             } else {
-                NavigationSplitView(columnVisibility: $columnVisibility) {
-                    SidebarView()
-                        .stableColumnSize()
-                        .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 340)
-                } detail: {
-                    WelcomeView()
-                        .stableColumnSize()
-                }
-                .navigationTitle("Revision")
+                WindowShell(model: nil)
+                    .navigationTitle("Revision")
             }
         }
         .sheet(item: $store.presentedSheet) { kind in
@@ -42,35 +34,30 @@ struct RootView: View {
     }
 }
 
-/// Okno s otevřeným repozitářem: postranní panel │ seznam │ detail │ inspektor.
+/// Okno s otevřeným repozitářem: společná kostra + chování repozitáře (dialogy, průběh, obnova).
 private struct RepositoryWindow: View {
     @Bindable var model: RepositoryModel
-    @Binding var columnVisibility: NavigationSplitViewVisibility
-    @Binding var inspectorShown: Bool
-    @State private var now = Date.now
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        NavigationSplitView(columnVisibility: $columnVisibility) {
-            SidebarView()
-                .stableColumnSize()
-                .navigationSplitViewColumnWidth(min: 220, ideal: 250, max: 340)
-        } content: {
-            RepositoryContentColumn(model: model)
-                .stableColumnSize()
-                .navigationSplitViewColumnWidth(min: 300, ideal: 370, max: 540)
-        } detail: {
-            RepositoryDetailColumn(model: model)
-                .stableColumnSize()
+        WindowShell(model: model)
+        .overlay(alignment: .bottom) {
+            if let busy = model.busyTitle {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(busy)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 9)
+                .glassEffect(.regular, in: .capsule)
+                .padding(.bottom, 20)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .accessibilityAddTraits(.updatesFrequently)
+            }
         }
-        .inspector(isPresented: $inspectorShown) {
-            InspectorView(model: model)
-                .stableColumnSize(alignment: .top)
-                .inspectorColumnWidth(min: 260, ideal: 300, max: 440)
-        }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.25), value: model.busyTitle)
+        // Titulek zůstává kvůli Mission Control a menu Okno; v toolbaru se nezobrazuje.
         .navigationTitle(model.project.name)
-        .navigationSubtitle(model.statusLine(now: now))
-        .searchable(text: $model.searchText, placement: .toolbar, prompt: model.section.searchPrompt)
-        .toolbar { RepositoryToolbar(model: model, inspectorShown: $inspectorShown) }
         .focusedSceneValue(\.repositoryModel, model)
         .errorSheet($model.errorMessage)
         .sheet(item: $model.sshUnlockRequest) { request in
@@ -109,13 +96,6 @@ private struct RepositoryWindow: View {
             Text("Tuto akci nelze vrátit.")
         }
         .onChange(of: model.project.id, initial: true) { model.activate() }
-        .task {
-            // Relativní čas v podtitulu („před 2 min“) se obnovuje průběžně.
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .seconds(30))
-                now = .now
-            }
-        }
     }
 }
 
@@ -133,18 +113,22 @@ struct WelcomeView: View {
                 Text("Revision").font(.largeTitle.weight(.semibold))
                 Text("See changes. Build with confidence.")
                     .font(.title3)
-                    .foregroundStyle(Brand.primaryBlue)
+                    .foregroundStyle(Theme.accent)
                 Text(store.projects.isEmpty ? "Přidej první repozitář a roztřiď ho do prostoru." : "Vyber repozitář v postranním panelu.")
                     .foregroundStyle(.secondary)
             }
 
-            HStack(spacing: 10) {
-                Button("Klonovat repozitář…") { store.presentedSheet = .clone }
-                    .buttonStyle(.borderedProminent)
-                Button("Přidat existující…") { store.presentedSheet = .addExisting }
-                Button("Nový repozitář…") { store.presentedSheet = .newRepository }
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 10) {
+                    Button("Klonovat repozitář…") { store.presentedSheet = .clone }
+                        .buttonStyle(.glassProminent)
+                    Button("Přidat existující…") { store.presentedSheet = .addExisting }
+                        .buttonStyle(.glass)
+                    Button("Nový repozitář…") { store.presentedSheet = .newRepository }
+                        .buttonStyle(.glass)
+                }
+                .controlSize(.large)
             }
-            .controlSize(.large)
         }
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

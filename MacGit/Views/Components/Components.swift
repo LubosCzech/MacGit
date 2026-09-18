@@ -6,12 +6,13 @@ import GitKit
 extension ChangeKind {
     var color: Color {
         switch self {
-        case .added, .untracked: .green
-        case .modified, .typeChanged: .orange
-        case .deleted: .red
-        case .renamed, .copied: .purple
-        case .conflicted: .pink
-        case .ignored: .gray
+        case .added: Theme.statusAdded
+        case .untracked: Theme.statusUntracked
+        case .modified, .typeChanged: Theme.statusModified
+        case .deleted: Theme.statusDeleted
+        case .renamed, .copied: Theme.statusRenamed
+        case .conflicted: Theme.statusDeleted
+        case .ignored: Theme.textSecondary
         }
     }
 
@@ -38,7 +39,8 @@ struct StatusLetter: View {
         Text(kind.letter)
             .font(.system(size: 11, weight: .bold))
             .foregroundStyle(kind.color)
-            .frame(width: 14)
+            .frame(width: 20, height: 20)
+            .background(Theme.tintedFill(kind.color), in: .rect(cornerRadius: 6))
             .help(kind.title)
             .accessibilityLabel(kind.title)
     }
@@ -264,5 +266,39 @@ struct ResizableSplit<Top: View, Bottom: View>: View {
             bottom
                 .frame(maxHeight: .infinity)
         }
+    }
+}
+
+/// Poměr přidaných a smazaných řádků – čísla i proužek, aby informaci nenesla jen barva.
+struct DiffStatBar: View {
+    let additions: Int
+    let deletions: Int
+
+    private var total: Int { max(additions + deletions, 1) }
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Text("+\(additions)")
+                .foregroundStyle(Theme.diffAddText)
+            Text("−\(deletions)")
+                .foregroundStyle(Theme.diffRemoveText)
+            Text("\(additions + deletions) řádků")
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.textSecondary)
+            Spacer(minLength: 8)
+            GeometryReader { proxy in
+                HStack(spacing: 2) {
+                    Capsule().fill(Theme.diffAddText)
+                        .frame(width: max(0, proxy.size.width - 2) * CGFloat(additions) / CGFloat(total))
+                    Capsule().fill(Theme.diffRemoveText)
+                        .frame(width: max(0, proxy.size.width - 2) * CGFloat(deletions) / CGFloat(total))
+                }
+            }
+            .frame(width: 78, height: 6)
+        }
+        .font(.system(size: 12, weight: .semibold).monospacedDigit())
+        .contentTransition(.numericText())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Přidáno \(additions) řádků, smazáno \(deletions) řádků")
     }
 }

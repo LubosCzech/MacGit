@@ -7,6 +7,10 @@ struct CommitComposer: View {
 
     private static let summaryLimit = 72
 
+    /// Po úspěšném commitu se tlačítko na chvíli promění ve fajfku.
+    @State private var justCommitted = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         let included = model.includedChanges.count
         let summaryLength = model.draftSummary.count
@@ -14,7 +18,11 @@ struct CommitComposer: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 TextField("Shrnutí", text: $model.draftSummary)
-                    .textFieldStyle(.roundedBorder)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12.5))
+                    .padding(9)
+                    .background(Theme.surfaceRaised.opacity(0.85), in: .rect(cornerRadius: 9))
+                    .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline) }
                     .disabled(model.isSuggestingMessage)
                     .accessibilityLabel("Shrnutí commitu")
                 SuggestMessageButton(model: model)
@@ -26,7 +34,11 @@ struct CommitComposer: View {
             }
 
             TextField("Popis (nepovinný)", text: $model.draftDescription, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12))
+                .padding(9)
+                .background(Theme.surfaceRaised.opacity(0.85), in: .rect(cornerRadius: 9))
+                .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline) }
                 .disabled(model.isSuggestingMessage)
                 .lineLimit(2...8)
                 .accessibilityLabel("Popis commitu")
@@ -36,15 +48,15 @@ struct CommitComposer: View {
                     model.inspectorTab = .repository
                     store.inspectorShown = true
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 5) {
                         Image(systemName: model.config.signCommits ? "signature" : "person.crop.circle")
-                            .foregroundStyle(model.config.signCommits ? AnyShapeStyle(.green) : AnyShapeStyle(.secondary))
+                            .foregroundStyle(model.config.signCommits ? AnyShapeStyle(Theme.success) : AnyShapeStyle(Theme.textSecondary))
                         Text(authorName)
                             .lineLimit(1)
                     }
                 }
                 .buttonStyle(.borderless)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.textSecondary)
                 .help(signatureHelp)
 
                 Spacer()
@@ -55,36 +67,63 @@ struct CommitComposer: View {
             }
             .font(.callout)
 
-            HStack(spacing: 8) {
-                Text(model.amend ? "Úprava posledního commitu" : "\(included) z \(model.status.changes.count) souborů")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
-                Spacer()
-                Menu {
-                    Button(model.amend ? "Amend a Push" : "Commit a Push") {
-                        Task { await model.commit(andPush: true) }
+            // Hlavní akce a její menu jsou dvě tlačítka ve společném skle – jen tak se dá
+            // roztáhnout přes celou šířku panelu (Menu se vždy zmenší na obsah).
+            GlassEffectContainer(spacing: 2) {
+                HStack(spacing: 2) {
+                    Button { commit(andPush: false) } label: {
+                        Group {
+                            if justCommitted {
+                                Label("Hotovo", systemImage: "checkmark").labelStyle(.titleAndIcon)
+                            } else {
+                                Text(model.amend ? "Upravit poslední commit" : "Commit \(included) souborů")
+                            }
+                        }
+                        .font(.system(size: 13, weight: .semibold))
+                        .frame(maxWidth: .infinity, minHeight: 32)
+                        .contentTransition(.symbolEffect(.replace))
                     }
-                } label: {
-                    Text(model.amend ? "Amend" : "Commit")
-                } primaryAction: {
-                    Task { await model.commit(andPush: false) }
+                    .buttonStyle(.glassProminent)
+                    .tint(justCommitted ? Theme.success : Theme.accentFill)
+                    .disabled(!model.canCommit && !justCommitted)
+
+                    Menu {
+                        Button(model.amend ? "Amend a Push" : "Commit a Push") { commit(andPush: true) }
+                    } label: {
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .frame(width: 30, height: 32)
+                    }
+                    .menuStyle(.button)
+                    .buttonStyle(.glassProminent)
+                    .tint(justCommitted ? Theme.success : Theme.accentFill)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .disabled(!model.canCommit)
+                    .accessibilityLabel("Další možnosti commitu")
                 }
-                .menuStyle(.button)
-                .buttonStyle(.borderedProminent)
-                .fixedSize()
-                .disabled(!model.canCommit)
-                .help("Commit (⌘↩), Commit a Push (⌥⌘↩)")
             }
+            .help("Commit (⌘↩), Commit a Push (⌥⌘↩)")
         }
         .padding(12)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .glassEffect(.regular, in: .rect(cornerRadius: 20))
+        .padding(10)
     }
 
     private var authorName: String {
         let name = model.config.effectiveName.isEmpty ? "Neznámý autor" : model.config.effectiveName
         return model.config.signCommits ? "\(name) · podepsáno" : name
+    }
+
+    /// Commit a krátké potvrzení v tlačítku.
+    private func commit(andPush push: Bool) {
+        Task {
+            await model.commit(andPush: push)
+            guard model.errorMessage == nil else { return }
+            withAnimation(reduceMotion ? nil : .bouncy(duration: 0.35)) { justCommitted = true }
+            try? await Task.sleep(for: .seconds(1.4))
+            withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) { justCommitted = false }
+        }
     }
 
     private var signatureHelp: String {
@@ -97,6 +136,7 @@ struct CommitComposer: View {
 /// Tlačítko s jiskrou: navrhne zprávu z vybraných změn, během generování ho jde zastavit.
 private struct SuggestMessageButton: View {
     let model: RepositoryModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let status = CommitMessageGenerator.status
@@ -105,12 +145,13 @@ private struct SuggestMessageButton: View {
         } label: {
             if model.isSuggestingMessage {
                 Image(systemName: "stop.circle")
-                    .symbolEffect(.pulse)
+                    .symbolEffect(.pulse, isActive: !reduceMotion)
             } else {
                 Image(systemName: "sparkles")
             }
         }
-        .buttonStyle(.borderless)
+        .buttonStyle(.glass)
+        .tint(Theme.accentDeep)
         .disabled(!model.isSuggestingMessage && !model.canSuggestMessage)
         .help(helpText(status))
         .accessibilityLabel(model.isSuggestingMessage ? "Zastavit návrh zprávy" : "Navrhnout zprávu commitu")

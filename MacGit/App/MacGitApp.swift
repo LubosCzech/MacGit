@@ -3,12 +3,15 @@ import SwiftUI
 @main
 struct RevisionApp: App {
     @State private var store = AppStore()
+    @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
 
     var body: some Scene {
         WindowGroup("Revision", id: "main") {
             RootView()
                 .environment(store)
-                .frame(minWidth: 980, minHeight: 600)
+                .preferredColorScheme(appearance.colorScheme)
+                .tint(Theme.accent)
+                .frame(minWidth: 1040, minHeight: 620)
                 #if DEBUG
                 .onAppear { DebugSnapshots.runIfRequested(store: store) }
                 #endif
@@ -20,12 +23,16 @@ struct RevisionApp: App {
         WindowGroup("AI review", id: "review", for: ReviewWindowValue.self) { $value in
             ReviewWindow(value: value)
                 .environment(store)
+                .preferredColorScheme(appearance.colorScheme)
+                .tint(Theme.accent)
         }
         .defaultSize(width: 900, height: 820)
 
         Settings {
             SettingsView()
                 .environment(store)
+                .preferredColorScheme(appearance.colorScheme)
+                .tint(Theme.accent)
         }
     }
 }
@@ -35,6 +42,8 @@ struct RevisionCommands: Commands {
     let store: AppStore
     @FocusedValue(\.repositoryModel) private var model
     @AppStorage("changesAsTree") private var changesAsTree = false
+    @AppStorage("diffLayoutMode") private var diffMode: DiffLayoutMode = .unified
+    @AppStorage("sidebarShown") private var sidebarShown = true
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -48,6 +57,8 @@ struct RevisionCommands: Commands {
         }
 
         CommandGroup(after: .sidebar) {
+            Button(sidebarShown ? "Skrýt postranní panel" : "Zobrazit postranní panel") { sidebarShown.toggle() }
+                .keyboardShortcut("s", modifiers: [.command, .control])
             ForEach(Array(RepositoryModel.Section.allCases.enumerated()), id: \.element) { index, section in
                 Button(section.title) { model?.section = section }
                     .keyboardShortcut(KeyEquivalent(Character("\(index + 1)")))
@@ -55,11 +66,26 @@ struct RevisionCommands: Commands {
             }
             Toggle("Změny jako strom složek", isOn: $changesAsTree)
                 .keyboardShortcut("l", modifiers: [.command, .option])
+            Picker("Rozdíly", selection: $diffMode) {
+                ForEach(DiffLayoutMode.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.inline)
             Divider()
             Button(store.inspectorShown ? "Skrýt inspektor" : "Zobrazit inspektor") { store.inspectorShown.toggle() }
                 .keyboardShortcut("i", modifiers: [.command, .option])
                 .disabled(model == nil)
             Divider()
+        }
+
+        CommandGroup(after: .textEditing) {
+            Button("Hledat") {
+                model?.isSearchExpanded = true
+            }
+            .keyboardShortcut("f")
+            .disabled(model == nil)
+
+            Button("Filtrovat repozitáře") { store.sidebarSearchFocusRequests += 1 }
+                .keyboardShortcut("k")
         }
 
         CommandMenu("Repozitář") {

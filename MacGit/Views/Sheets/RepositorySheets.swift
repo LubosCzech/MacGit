@@ -136,7 +136,7 @@ struct CloneSheet: View {
 
                 if let error {
                     Label(error, systemImage: "xmark.octagon")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(Theme.statusDeleted)
                         .textSelection(.enabled)
                 }
             }
@@ -253,7 +253,7 @@ struct AddExistingSheet: View {
                 Text("Tip: složky s repozitáři můžeš také přetáhnout do postranního panelu.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(.red) }
+                if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(Theme.statusDeleted) }
             }
             .formStyle(.grouped)
             SheetButtons(confirmTitle: "Přidat", isWorking: isWorking, isDisabled: directory == nil) {
@@ -301,7 +301,7 @@ struct NewRepositorySheet: View {
                 }
                 TextField("Výchozí větev", text: $branch)
                 SpacePicker(spaceID: $spaceID)
-                if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(.red) }
+                if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(Theme.statusDeleted) }
             }
             .formStyle(.grouped)
             SheetButtons(confirmTitle: "Vytvořit", isWorking: isWorking, isDisabled: name.isEmpty || branch.isEmpty) {

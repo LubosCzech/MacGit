@@ -5,6 +5,7 @@ enum DiffLayoutMode: String, CaseIterable, Identifiable {
     case unified, split
     var id: String { rawValue }
     var title: String { self == .unified ? "Jednotný" : "Vedle sebe" }
+    var symbol: String { self == .unified ? "list.bullet.rectangle" : "rectangle.split.2x1" }
 }
 
 /// Diff souboru: hlavička s přepínačem zobrazení a obsah.
@@ -15,13 +16,13 @@ struct DiffView: View {
     var placeholderMessage: String? = "Rozdíly vybraného souboru se zobrazí tady."
 
     @AppStorage("diffLayoutMode") private var mode: DiffLayoutMode = .unified
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         if let diff {
             VStack(spacing: 0) {
-                header(diff)
-                Divider()
-                Group {
+            header(diff)
+            Group {
                 if diff.isBinary {
                     EmptyStateView(title: "Binární soubor", symbol: "doc.zipper", message: "Rozdíly binárních souborů nelze zobrazit.")
                 } else if diff.isEmpty {
@@ -31,8 +32,13 @@ struct DiffView: View {
                 } else {
                     SplitDiffContent(rows: DiffLayout.split(diff))
                 }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Přechod na jiný soubor se prolne s drobným posunem, ať je vidět, že se obsah vyměnil.
+            .id(diff.path + mode.rawValue)
+            .transition(.opacity.combined(with: .offset(y: 8)))
+            .animation(reduceMotion ? nil : .smooth(duration: 0.22), value: diff.path)
+            .scrollEdgeEffectStyle(.soft, for: .top)
             }
         } else {
             EmptyStateView(title: placeholder, symbol: "doc.text.magnifyingglass", message: placeholderMessage)
@@ -40,33 +46,42 @@ struct DiffView: View {
     }
 
     private func header(_ diff: FileDiff) -> some View {
-        HStack(spacing: 8) {
-            FileIcon(path: diff.path)
-            Text((diff.path as NSString).lastPathComponent)
-                .font(.headline)
-                .lineLimit(1)
-            Text(subtitle ?? (diff.path as NSString).deletingLastPathComponent)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
+        HStack(spacing: 10) {
+            FileIcon(path: diff.path, size: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text((diff.path as NSString).lastPathComponent)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                    .lineLimit(1)
+                Text(subtitle ?? (diff.path as NSString).deletingLastPathComponent)
+                    .font(.system(size: 10.5))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1).truncationMode(.middle)
+            }
+            Spacer(minLength: 8)
             if !diff.isBinary {
-                Text("+\(diff.additions)")
-                    .foregroundStyle(.green)
-                Text("−\(diff.deletions)")
-                    .foregroundStyle(.red)
+                HStack(spacing: 7) {
+                    Text("+\(diff.additions)").foregroundStyle(Theme.diffAddText)
+                    Text("−\(diff.deletions)").foregroundStyle(Theme.diffRemoveText)
+                }
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .contentTransition(.numericText())
             }
-            Spacer(minLength: 12)
-            Picker("Zobrazení rozdílů", selection: $mode) {
-                ForEach(DiffLayoutMode.allCases) { Text($0.title).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-            .fixedSize()
-            .controlSize(.small)
+            DiffModeSwitcher(mode: $mode).frame(width: 84)
         }
-        .font(.system(size: 12).monospacedDigit())
         .padding(.horizontal, 16)
-        .frame(height: 38)
+        .frame(height: 56)
+    }
+}
+
+private struct DiffModeSwitcher: View {
+    @Binding var mode: DiffLayoutMode
+    var body: some View {
+        RevisionTabPicker(values: DiffLayoutMode.allCases, selection: $mode) { option in
+            Image(systemName: option.symbol)
+                .help(option.title)
+                .accessibilityLabel(option.title)
+        }
     }
 }
 
@@ -216,8 +231,8 @@ enum DiffLayout {
             // Zvýrazňujeme jen dílčí změny; přepsaný celý řádek by byl jen šum.
             guard max(changedOld, changedNew) > 0,
                   Double(changedOld) < Double(a.count) * 0.7 || Double(changedNew) < Double(b.count) * 0.7 else { continue }
-            highlight(&old[index], text: a, from: prefix, length: changedOld, color: .red)
-            highlight(&new[index], text: b, from: prefix, length: changedNew, color: .green)
+            highlight(&old[index], text: a, from: prefix, length: changedOld, color: Theme.diffWordRemove)
+            highlight(&new[index], text: b, from: prefix, length: changedNew, color: Theme.diffWordAdd)
         }
         return (old, new)
     }
@@ -226,7 +241,7 @@ enum DiffLayout {
         guard length > 0 else { return }
         let lower = string.characters.index(string.startIndex, offsetBy: start)
         let upper = string.characters.index(lower, offsetBy: length)
-        string[lower..<upper].backgroundColor = color.opacity(0.28)
+        string[lower..<upper].backgroundColor = color
     }
 }
 
@@ -236,10 +251,20 @@ private let diffFont = Font.system(size: 12, design: .monospaced)
 
 private func diffBackground(for kind: DiffLayout.UnifiedRow.Kind) -> Color {
     switch kind {
-    case .addition: .green.opacity(0.11)
-    case .deletion: .red.opacity(0.09)
-    case .hunk: .accentColor.opacity(0.07)
+    case .addition: Theme.diffAddBackground
+    case .deletion: Theme.diffRemoveBackground
+    case .hunk: Theme.surfaceSunken
     default: .clear
+    }
+}
+
+/// Barva textu řádku podle druhu změny – znaménko i text nesou informaci i bez barvy pozadí.
+private func diffForeground(for kind: DiffLayout.UnifiedRow.Kind) -> Color {
+    switch kind {
+    case .addition: Theme.diffAddText
+    case .deletion: Theme.diffRemoveText
+    case .meta: Theme.textSecondary
+    default: Theme.textPrimary
     }
 }
 
@@ -261,24 +286,26 @@ private struct UnifiedDiffContent: View {
                     if row.kind == .hunk {
                         Text(row.text)
                             .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.accentText)
                             .lineLimit(1)
                             .padding(.leading, 16)
                             .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
                             .background(diffBackground(for: .hunk))
+                            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                            .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     } else {
                         HStack(spacing: 0) {
                             Text(row.oldLine.map(String.init) ?? "")
                                 .frame(width: 46, alignment: .trailing)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(Theme.textSecondary.opacity(0.7))
                             Text(row.newLine.map(String.init) ?? "")
                                 .frame(width: 46, alignment: .trailing)
-                                .foregroundStyle(.tertiary)
+                                .foregroundStyle(Theme.textSecondary.opacity(0.7))
                             Text(row.kind == .addition ? "+" : row.kind == .deletion ? "−" : "")
                                 .frame(width: 22)
-                                .foregroundStyle(row.kind == .addition ? .green : .red)
+                                .foregroundStyle(diffForeground(for: row.kind))
                             Text(DiffLayout.displayText(row.text))
-                                .foregroundStyle(row.kind == .meta ? .secondary : .primary)
+                                .foregroundStyle(diffForeground(for: row.kind))
                                 .lineLimit(1)
                                 .fixedSize(horizontal: true, vertical: false)
                             Spacer(minLength: 16)
@@ -306,10 +333,12 @@ private struct SplitDiffContent: View {
                     if row.isHunk {
                         Text(row.header)
                             .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.accentText)
                             .padding(.leading, 16)
                             .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
                             .background(diffBackground(for: .hunk))
+                            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                            .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     } else {
                         HStack(spacing: 0) {
                             side(row.left)
@@ -329,14 +358,15 @@ private struct SplitDiffContent: View {
         HStack(spacing: 0) {
             Text(side.map { String($0.line) } ?? "")
                 .frame(width: 46, alignment: .trailing)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(Theme.textSecondary.opacity(0.7))
             Text(side.map { DiffLayout.displayText($0.text) } ?? "")
+                .foregroundStyle(side.map { diffForeground(for: $0.kind) } ?? Theme.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .padding(.leading, 12)
             Spacer(minLength: 0)
         }
         .frame(maxWidth: .infinity, minHeight: 20)
-        .background(side.map { diffBackground(for: $0.kind) } ?? Color.secondary.opacity(0.05))
+        .background(side.map { diffBackground(for: $0.kind) } ?? Theme.surfaceSunken)
     }
 }
