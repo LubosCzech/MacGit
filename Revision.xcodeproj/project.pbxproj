@@ -20,6 +20,7 @@
 		3BF8AFDF55E15A10F501D01C /* CommitComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3BBF92643E8208FD85F6BDB /* CommitComposer.swift */; };
 		404670B751A2AEC1FBD11A2F /* RepositoryInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43635A87A7B946B97FACAD06 /* RepositoryInspector.swift */; };
 		52AAF0015999BC5E40A21E10 /* GitignoreTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB55738AFC1A7D124935608D /* GitignoreTemplate.swift */; };
+		554DBA716456949D954BE4D6 /* InterfaceStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0A83579310A37F3F2AF9173 /* InterfaceStyle.swift */; };
 		5A3FF5F40D58D98E64E97651 /* DiffView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0CC7FB449D00CD2347E5436 /* DiffView.swift */; };
 		76F5E4B8D2EDC929B2BFC970 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFFFF297DC4380245CA4C345 /* Keychain.swift */; };
 		7B20570E23E32100AE4F0E0B /* AppStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E67B8A28F3B75982D536487C /* AppStore.swift */; };
@@ -42,6 +43,7 @@
 		F02BFEF8B73CE87A60F0B89F /* HostTrustSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A76777E7488D6BC26226C7D /* HostTrustSheet.swift */; };
 		F0F1592FC1418D537C125701 /* Brand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15BE72CAB85FC19911FE1677 /* Brand.swift */; };
 		F1831428A6CE7C17E570B8B2 /* AuthEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3438B343761666CF113C3B24 /* AuthEditor.swift */; };
+		F21F11C9B429AA3CA4E64BBA /* ClassicShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19D70A589372F8E1323316F8 /* ClassicShell.swift */; };
 		FA670D7161F85685D1395572 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF09CAB098DC74EB54ACDD17 /* AppModels.swift */; };
 		FC910813FFAE0B2DBF94F7EE /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B75A0B9EA88ACF0E40F8E26D /* Theme.swift */; };
 		FFB6EB13235CB319B8F7792B /* RepositorySheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914C84F0FB540158BCDD1C18 /* RepositorySheets.swift */; };
@@ -53,6 +55,7 @@
 		0A76777E7488D6BC26226C7D /* HostTrustSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostTrustSheet.swift; sourceTree = "<group>"; };
 		108159E398BFB75D3735A4BA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		15BE72CAB85FC19911FE1677 /* Brand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Brand.swift; sourceTree = "<group>"; };
+		19D70A589372F8E1323316F8 /* ClassicShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassicShell.swift; sourceTree = "<group>"; };
 		2336B72034AB7A4E16477C2D /* WindowShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowShell.swift; sourceTree = "<group>"; };
 		3438B343761666CF113C3B24 /* AuthEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthEditor.swift; sourceTree = "<group>"; };
 		35E490E629137DC6465A8A75 /* SearchOrb.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchOrb.swift; sourceTree = "<group>"; };
@@ -79,6 +82,7 @@
 		B75A0B9EA88ACF0E40F8E26D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		BDEA7ADFAE80FD915AB851C2 /* ShelfView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShelfView.swift; sourceTree = "<group>"; };
 		BE46CB9B9A9B8FB5456FD7FB /* ReviewCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewCenter.swift; sourceTree = "<group>"; };
+		C0A83579310A37F3F2AF9173 /* InterfaceStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceStyle.swift; sourceTree = "<group>"; };
 		D5BD95E15379E2C327E6D895 /* BranchesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchesView.swift; sourceTree = "<group>"; };
 		E1BD7FF78573C44CE194683C /* MacGitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacGitApp.swift; sourceTree = "<group>"; };
 		E5CBE9E2D2175C5DE0605B8C /* ErrorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorSheet.swift; sourceTree = "<group>"; };
@@ -262,6 +266,7 @@
 				15BE72CAB85FC19911FE1677 /* Brand.swift */,
 				98085820ED953FC0A9B9277D /* Components.swift */,
 				B0CC7FB449D00CD2347E5436 /* DiffView.swift */,
+				C0A83579310A37F3F2AF9173 /* InterfaceStyle.swift */,
 				35E490E629137DC6465A8A75 /* SearchOrb.swift */,
 				B75A0B9EA88ACF0E40F8E26D /* Theme.swift */,
 			);
@@ -297,6 +302,7 @@
 		D7107A7F90DC57AFB200DA6A /* Shell */ = {
 			isa = PBXGroup;
 			children = (
+				19D70A589372F8E1323316F8 /* ClassicShell.swift */,
 				2336B72034AB7A4E16477C2D /* WindowShell.swift */,
 			);
 			path = Shell;
@@ -385,6 +391,7 @@
 				22F1F2584B2D3BDB4D20D932 /* BranchesView.swift in Sources */,
 				F0F1592FC1418D537C125701 /* Brand.swift in Sources */,
 				2E4322CD33C7F815A1449360 /* ChangesView.swift in Sources */,
+				F21F11C9B429AA3CA4E64BBA /* ClassicShell.swift in Sources */,
 				3BF8AFDF55E15A10F501D01C /* CommitComposer.swift in Sources */,
 				ADDA0C3EFAB343796519F148 /* CommitMessageGenerator.swift in Sources */,
 				95C512BE42E5A12C48886566 /* Components.swift in Sources */,
@@ -395,6 +402,7 @@
 				E3A9A6B337F942BD490293C9 /* HistoryView.swift in Sources */,
 				F02BFEF8B73CE87A60F0B89F /* HostTrustSheet.swift in Sources */,
 				8B5A5B0424DD2F9FAB079BE2 /* InspectorView.swift in Sources */,
+				554DBA716456949D954BE4D6 /* InterfaceStyle.swift in Sources */,
 				76F5E4B8D2EDC929B2BFC970 /* Keychain.swift in Sources */,
 				C176DFC07A73A2869887781E /* MacGitApp.swift in Sources */,
 				1AACA7EB7A87DF8D7029B5D2 /* RepositoryColumns.swift in Sources */,

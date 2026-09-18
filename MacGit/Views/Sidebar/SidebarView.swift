@@ -32,15 +32,15 @@ struct SidebarView: View {
         groups.flatMap { space in isExpanded(space) ? projects(in: space) : [] }
     }
 
+    @Environment(\.interfaceStyle) private var style
+
     var body: some View {
-        VStack(spacing: 0) {
-            identity
-            searchField
-            content
-            footer
+        Group {
+            switch style {
+            case .revision: brandedLayout
+            case .classic: classicList
+            }
         }
-        .onKeyPress(.upArrow) { move(by: -1) }
-        .onKeyPress(.downArrow) { move(by: 1) }
         .onChange(of: store.sidebarSearchFocusRequests) { searchFocused = true }
         .dropDestination(for: URL.self) { urls, _ in
             Task {
@@ -70,6 +70,92 @@ struct SidebarView: View {
         } message: {
             Text("Repozitáře se přesunou do Nezařazených.")
         }
+    }
+
+    // MARK: Revision
+
+    private var brandedLayout: some View {
+        VStack(spacing: 0) {
+            identity
+            searchField
+            content
+            footer
+        }
+        .onKeyPress(.upArrow) { move(by: -1) }
+        .onKeyPress(.downArrow) { move(by: 1) }
+    }
+
+    // MARK: Klasický – systémový postranní panel
+
+    private var classicList: some View {
+        List(selection: Binding(get: { store.selectedProjectID }, set: { store.selectedProjectID = $0 })) {
+            ForEach(groups, id: \.?.id) { space in
+                let projects = projects(in: space)
+                if filter.isEmpty || !projects.isEmpty {
+                    Section(isExpanded: expansion(for: space)) {
+                        ForEach(projects) { project in
+                            ClassicProjectRow(project: project)
+                                .tag(project.id)
+                                .draggable(project.id.uuidString)
+                                .contextMenu { projectMenu(project) }
+                        }
+                    } header: {
+                        Label {
+                            Text(space?.name ?? "Nezařazené")
+                        } icon: {
+                            Image(systemName: space?.symbol ?? "tray")
+                                .foregroundStyle(space?.color.color ?? .secondary)
+                        }
+                        .dropDestination(for: String.self) { items, _ in
+                            for item in items {
+                                if let id = UUID(uuidString: item), let project = store.project(id) {
+                                    store.move(project, to: space?.id)
+                                }
+                            }
+                            return true
+                        }
+                        .contextMenu { if let space { spaceMenu(space) } }
+                    }
+                }
+            }
+        }
+        .listStyle(.sidebar)
+        .searchable(text: $filter, placement: .sidebar, prompt: "Filtrovat")
+        .searchFocused($searchFocused)
+        .overlay {
+            if store.projects.isEmpty {
+                ContentUnavailableView {
+                    Label("Žádné repozitáře", systemImage: "arrow.triangle.branch")
+                } description: {
+                    Text("Přetáhni sem složku s repozitářem.")
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            HStack {
+                addMenu
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+        }
+    }
+
+    private var addMenu: some View {
+        Menu {
+            Button("Klonovat repozitář…") { store.presentedSheet = .clone }
+            Button("Přidat existující repozitář…") { store.presentedSheet = .addExisting }
+            Button("Nový repozitář…") { store.presentedSheet = .newRepository }
+            Divider()
+            Button("Nový prostor…") { store.presentedSheet = .newSpace }
+        } label: {
+            Label("Přidat", systemImage: "plus")
+        }
+        .menuIndicator(.hidden)
+        .accessibilityLabel("Přidat")
+        .help("Přidat repozitář nebo prostor")
     }
 
     // MARK: Části
@@ -427,5 +513,23 @@ struct SelectionCapsule: View {
                     )
             }
             .shadow(color: Theme.accent.opacity(0.22), radius: 8, y: 3)
+    }
+}
+
+/// Řádek repozitáře v klasickém postranním panelu – systémový `Label` s odznakem.
+private struct ClassicProjectRow: View {
+    @Environment(AppStore.self) private var store
+    let project: Project
+
+    var body: some View {
+        let model = store.model(for: project)
+        Label {
+            Text(project.name).lineLimit(1)
+        } icon: {
+            Image(systemName: project.exists ? "arrow.triangle.branch" : "exclamationmark.triangle.fill")
+                .foregroundStyle(project.exists ? AnyShapeStyle(.tint) : AnyShapeStyle(.orange))
+        }
+        .badge(model.hasLoaded ? model.status.changes.count : 0)
+        .help((project.path as NSString).abbreviatingWithTildeInPath)
     }
 }

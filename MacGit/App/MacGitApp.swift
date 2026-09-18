@@ -4,11 +4,17 @@ import SwiftUI
 struct RevisionApp: App {
     @State private var store = AppStore()
     @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
+    @AppStorage(InterfaceStyle.storageKey) private var interfaceStyle: InterfaceStyle = .revision
 
     var body: some Scene {
+        // Tokeny v `Theme` čtou aktuální styl; okna se při změně přestaví přes `.id`.
+        let _ = { InterfaceStyle.current = interfaceStyle }()
+
         WindowGroup("Revision", id: "main") {
             RootView()
                 .environment(store)
+                .environment(\.interfaceStyle, interfaceStyle)
+                .id(interfaceStyle)
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)
                 .frame(minWidth: 1040, minHeight: 620)
@@ -23,6 +29,8 @@ struct RevisionApp: App {
         WindowGroup("AI review", id: "review", for: ReviewWindowValue.self) { $value in
             ReviewWindow(value: value)
                 .environment(store)
+                .environment(\.interfaceStyle, interfaceStyle)
+                .id(interfaceStyle)
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)
         }
@@ -31,6 +39,7 @@ struct RevisionApp: App {
         Settings {
             SettingsView()
                 .environment(store)
+                .environment(\.interfaceStyle, interfaceStyle)
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)
         }

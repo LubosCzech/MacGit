@@ -27,6 +27,11 @@ struct WindowShell: View {
             let showsInspector = model != nil && store.inspectorShown
                 && proxy.size.width - fixed - inspectorWidth >= Self.detailMinWidth
 
+            VStack(spacing: 0) {
+            // Linka pod toolbarem je skutečný 1pt pohled, ne overlay: sloupce pak nesousedí
+            // s oblastí toolbaru a seznamy nedostávají jeho odsazení navíc (prázdná díra nad obsahem).
+            Rectangle().fill(Theme.hairline).frame(height: 1)
+
             HStack(spacing: 0) {
                 if sidebarShown {
                     SidebarView()
@@ -54,12 +59,9 @@ struct WindowShell: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             .animation(reduceMotion ? nil : .smooth(duration: 0.28), value: sidebarShown)
             .animation(reduceMotion ? nil : .smooth(duration: 0.28), value: showsInspector)
-        }
-        // Linka pod toolbarem – jediné oddělení lišty od obsahu, pozadí zůstává společné.
-        .overlay(alignment: .top) {
-            Rectangle().fill(Theme.hairline).frame(height: 1).ignoresSafeArea(edges: .horizontal)
         }
         .background { RevisionSurface().ignoresSafeArea() }
         .toolbar {

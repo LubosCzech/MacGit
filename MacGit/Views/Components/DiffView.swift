@@ -20,8 +20,6 @@ struct DiffView: View {
 
     var body: some View {
         if let diff {
-            VStack(spacing: 0) {
-            header(diff)
             Group {
                 if diff.isBinary {
                     EmptyStateView(title: "Binární soubor", symbol: "doc.zipper", message: "Rozdíly binárních souborů nelze zobrazit.")
@@ -38,8 +36,7 @@ struct DiffView: View {
             .id(diff.path + mode.rawValue)
             .transition(.opacity.combined(with: .offset(y: 8)))
             .animation(reduceMotion ? nil : .smooth(duration: 0.22), value: diff.path)
-            .scrollEdgeEffectStyle(.soft, for: .top)
-            }
+            .glassHeader { header(diff) }
         } else {
             EmptyStateView(title: placeholder, symbol: "doc.text.magnifyingglass", message: placeholderMessage)
         }

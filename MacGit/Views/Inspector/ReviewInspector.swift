@@ -113,7 +113,7 @@ struct ReviewInspector: View {
                         .font(.system(size: 11.5))
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glass)
+                .adaptiveButtonStyle()
             } else if reviews.contains(where: { $0.status == .running }) {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
@@ -133,11 +133,11 @@ struct ReviewInspector: View {
                         .font(.system(size: 11.5))
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.glass)
+                .adaptiveButtonStyle()
             }
         }
         .padding(12)
-        .glassEffect(.regular.tint(Theme.accent.opacity(0.10)), in: .rect(cornerRadius: 16))
+        .adaptiveCard(cornerRadius: 16, tint: Theme.accent.opacity(0.10))
     }
 
     private func finding(symbol: String, color: Color, title: String, detail: String) -> some View {

@@ -48,7 +48,7 @@ struct BranchesList: View {
                     } label: {
                         Label("Nová větev", systemImage: "plus")
                     }
-                    .buttonStyle(.glass)
+                    .adaptiveButtonStyle()
                     .help("Nová větev… (⇧⌘B)")
                 }
                 Spacer()

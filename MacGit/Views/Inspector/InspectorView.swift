@@ -6,18 +6,21 @@ struct InspectorView: View {
     @Bindable var model: RepositoryModel
 
     var body: some View {
-        VStack(spacing: 0) {
-            RevisionTabPicker(values: model.inspectorTabs, selection: $model.inspectorTab) { tab in
-                Text(tab.title).lineLimit(1)
-            }
-            .padding(12)
-
+        Group {
             switch model.inspectorTab {
             case .file: FileInspector(model: model)
             case .commit: CommitInspector(model: model)
             case .review: ReviewInspector(model: model)
             case .repository: RepositoryInspector(model: model)
             }
+        }
+        // Rolovací obsah vede přes celou výšku; prázdné stavy jsou vycentrované, ať nezajíždějí pod lištu.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .glassHeader {
+            RevisionTabPicker(values: model.inspectorTabs, selection: $model.inspectorTab) { tab in
+                Text(tab.title).lineLimit(1)
+            }
+            .padding(12)
         }
     }
 }
@@ -104,7 +107,7 @@ private struct FileInspector: View {
                                 .frame(maxWidth: .infinity)
                         }
                     }
-                    .buttonStyle(.glass)
+                    .adaptiveButtonStyle()
                 }
             }
         } else {

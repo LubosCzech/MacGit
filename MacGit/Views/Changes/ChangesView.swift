@@ -350,7 +350,7 @@ private struct GitignoreBanner: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassEffect(.regular.tint(Theme.warning.opacity(0.22)), in: .rect(cornerRadius: 14))
+        .adaptiveCard(cornerRadius: 14, tint: Theme.warning.opacity(0.22))
         .padding(.horizontal, 10)
         .padding(.bottom, 8)
     }

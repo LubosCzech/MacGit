@@ -3,29 +3,34 @@ import GitKit
 
 /// Prostřední sloupec: hlavička repozitáře, přepínač sekcí a seznam (změny, commity, větve, shelf).
 ///
-/// Hlavička a seznam jsou pod sebou ve VStacku, ne přes `safeAreaInset`: seznam jinak sahá
-/// až k toolbaru a dostane k odsazení hlavičky ještě odsazení toolbaru – nad soubory pak
-/// zůstává prázdná díra.
+/// V Revision je hlavička skleněná lišta a seznam pod ní zajíždí (viz `glassHeader`).
 struct RepositoryContentColumn: View {
     @Bindable var model: RepositoryModel
     @AppStorage("changesAsTree") private var changesAsTree = false
+    @Environment(\.interfaceStyle) private var style
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            RepositoryHeader(model: model)
-            SectionSwitcher(model: model, changesAsTree: $changesAsTree)
-
-            Group {
-                switch model.section {
-                case .changes: ChangesList(model: model)
-                case .history: HistoryList(model: model)
-                case .branches: BranchesList(model: model)
-                case .shelf: ShelfList(model: model)
-                }
+        Group {
+            switch model.section {
+            case .changes: ChangesList(model: model)
+            case .history: HistoryList(model: model)
+            case .branches: BranchesList(model: model)
+            case .shelf: ShelfList(model: model)
             }
-            .scrollContentBackground(.hidden)
-            .scrollEdgeEffectStyle(.soft, for: .top)
-            .frame(maxHeight: .infinity)
+        }
+        .scrollContentBackground(.hidden)
+        .frame(maxHeight: .infinity)
+        .glassHeader {
+            switch style {
+            case .revision:
+                VStack(alignment: .leading, spacing: 0) {
+                    RepositoryHeader(model: model)
+                    SectionSwitcher(model: model, changesAsTree: $changesAsTree)
+                }
+            case .classic:
+                // Název repa je v titulku okna – sloupec začíná rovnou přepínačem, jako v systémových aplikacích.
+                ClassicSectionBar(model: model)
+            }
         }
     }
 }
@@ -33,9 +38,6 @@ struct RepositoryContentColumn: View {
 /// Hlavička sloupce: které repo je otevřené a akce, které se týkají jeho a tohoto seznamu.
 private struct RepositoryHeader: View {
     let model: RepositoryModel
-    @Environment(AppStore.self) private var store
-    @AppStorage("changesAsTree") private var changesAsTree = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -52,27 +54,7 @@ private struct RepositoryHeader: View {
             }
             Spacer(minLength: 0)
             Menu {
-                Section("Seznam změn") {
-                    Picker("Zobrazení", selection: Binding(
-                        get: { changesAsTree },
-                        set: { value in withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) { changesAsTree = value } }
-                    )) {
-                        Label("Seznam", systemImage: "list.bullet").tag(false)
-                        Label("Strom složek", systemImage: "list.bullet.indent").tag(true)
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                }
-                Section("Repozitář") {
-                    Button("Zobrazit ve Finderu") { model.revealInFinder() }
-                    Button("Otevřít v Terminálu") { model.openInTerminal() }
-                    Button("Kopírovat cestu") { NSPasteboard.copy(model.project.path) }
-                    Divider()
-                    Button("Nastavení repozitáře…") {
-                        model.inspectorTab = .repository
-                        store.inspectorShown = true
-                    }
-                }
+                RepositoryMenuItems(model: model)
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.system(size: 12, weight: .semibold))
@@ -88,8 +70,78 @@ private struct RepositoryHeader: View {
             .help("Zobrazení seznamu a akce repozitáře")
         }
         .padding(.horizontal, 16)
-        .padding(.top, 14)
-        .padding(.bottom, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+    }
+}
+
+/// Položky menu ⋯: jak zobrazit tento seznam a akce tohoto repozitáře. Sdílí je oba styly.
+private struct RepositoryMenuItems: View {
+    let model: RepositoryModel
+    @Environment(AppStore.self) private var store
+    @AppStorage("changesAsTree") private var changesAsTree = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        Section("Seznam změn") {
+            Picker("Zobrazení", selection: Binding(
+                get: { changesAsTree },
+                set: { value in withAnimation(reduceMotion ? nil : .smooth(duration: 0.25)) { changesAsTree = value } }
+            )) {
+                Label("Seznam", systemImage: "list.bullet").tag(false)
+                Label("Strom složek", systemImage: "list.bullet.indent").tag(true)
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        }
+        Section("Repozitář") {
+            Button("Zobrazit ve Finderu") { model.revealInFinder() }
+            Button("Otevřít v Terminálu") { model.openInTerminal() }
+            Button("Kopírovat cestu") { NSPasteboard.copy(model.project.path) }
+            Divider()
+            Button("Nastavení repozitáře…") {
+                model.inspectorTab = .repository
+                store.inspectorShown = true
+            }
+        }
+    }
+}
+
+/// Klasický styl: systémový segmentový přepínač sekcí a vedle něj standardní menu ⋯.
+private struct ClassicSectionBar: View {
+    @Bindable var model: RepositoryModel
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Picker("Sekce", selection: $model.section) {
+                ForEach(RepositoryModel.Section.allCases) { section in
+                    Text(title(for: section)).tag(section)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            Menu {
+                RepositoryMenuItems(model: model)
+            } label: {
+                Label("Další možnosti", systemImage: "ellipsis.circle")
+                    .labelStyle(.iconOnly)
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("Zobrazení seznamu a akce repozitáře")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private func title(for section: RepositoryModel.Section) -> String {
+        switch section {
+        case .changes where !model.status.changes.isEmpty: "\(section.title) (\(model.status.changes.count))"
+        case .shelf where !model.workspace.shelves.isEmpty: "\(section.title) (\(model.workspace.shelves.count))"
+        default: section.title
+        }
     }
 }
 
@@ -121,7 +173,7 @@ private struct SectionSwitcher: View {
             }
         }
         .padding(.horizontal, 12)
-        .padding(.bottom, 8)
+        .padding(.bottom, 10)
     }
 
     private func count(for section: RepositoryModel.Section) -> Int? {

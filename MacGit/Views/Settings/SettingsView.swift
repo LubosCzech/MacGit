@@ -3,16 +3,33 @@ import GitKit
 
 struct SettingsView: View {
     @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
+    @AppStorage(InterfaceStyle.storageKey) private var interfaceStyle: InterfaceStyle = .revision
+
     var body: some View {
         TabView {
             Tab("Vzhled", systemImage: "circle.lefthalf.filled") {
                 Form {
-                    Section("Revision") {
+                    Section {
+                        Picker("Styl rozhraní", selection: $interfaceStyle) {
+                            ForEach(InterfaceStyle.allCases) { style in
+                                Text(style.title).tag(style)
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        Text(interfaceStyle.summary)
+                            .font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } header: {
+                        Text("Styl")
+                    }
+
+                    Section("Téma") {
                         Picker("Vzhled aplikace", selection: $appearance) {
                             ForEach(RevisionAppearance.allCases) { Text($0.title).tag($0) }
                         }
-                        Text("Průhlednost a pohyb respektují nastavení zpřístupnění macOS.")
+                        Text("Oba styly mají světlou i tmavou variantu. Průhlednost a pohyb respektují nastavení zpřístupnění macOS.")
                             .font(.callout).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }.formStyle(.grouped)
             }

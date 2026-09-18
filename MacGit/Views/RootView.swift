@@ -14,7 +14,7 @@ struct RootView: View {
             if let model {
                 RepositoryWindow(model: model)
             } else {
-                WindowShell(model: nil)
+                StyledShell(model: nil)
                     .navigationTitle("Revision")
             }
         }
@@ -34,13 +34,26 @@ struct RootView: View {
     }
 }
 
+/// Kostra okna podle zvoleného stylu rozhraní.
+private struct StyledShell: View {
+    let model: RepositoryModel?
+    @Environment(\.interfaceStyle) private var style
+
+    var body: some View {
+        switch style {
+        case .revision: WindowShell(model: model)
+        case .classic: ClassicShell(model: model)
+        }
+    }
+}
+
 /// Okno s otevřeným repozitářem: společná kostra + chování repozitáře (dialogy, průběh, obnova).
 private struct RepositoryWindow: View {
     @Bindable var model: RepositoryModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        WindowShell(model: model)
+        StyledShell(model: model)
         .overlay(alignment: .bottom) {
             if let busy = model.busyTitle {
                 HStack(spacing: 8) {
@@ -121,11 +134,11 @@ struct WelcomeView: View {
             GlassEffectContainer(spacing: 10) {
                 HStack(spacing: 10) {
                     Button("Klonovat repozitář…") { store.presentedSheet = .clone }
-                        .buttonStyle(.glassProminent)
+                        .adaptiveButtonStyle(prominent: true)
                     Button("Přidat existující…") { store.presentedSheet = .addExisting }
-                        .buttonStyle(.glass)
+                        .adaptiveButtonStyle()
                     Button("Nový repozitář…") { store.presentedSheet = .newRepository }
-                        .buttonStyle(.glass)
+                        .adaptiveButtonStyle()
                 }
                 .controlSize(.large)
             }

@@ -63,8 +63,21 @@ struct RevisionTabPicker<Value: Hashable, Label: View>: View {
     @ViewBuilder var label: (Value) -> Label
     @Namespace private var pill
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.interfaceStyle) private var style
 
     var body: some View {
+        switch style {
+        case .revision: branded
+        case .classic:
+            Picker("", selection: $selection) {
+                ForEach(values, id: \.self) { value in label(value).tag(value) }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+    }
+
+    private var branded: some View {
         HStack(spacing: 2) {
             ForEach(values, id: \.self) { value in
                 Button {

@@ -83,7 +83,7 @@ struct CommitComposer: View {
                         .frame(maxWidth: .infinity, minHeight: 32)
                         .contentTransition(.symbolEffect(.replace))
                     }
-                    .buttonStyle(.glassProminent)
+                    .adaptiveButtonStyle(prominent: true)
                     .tint(justCommitted ? Theme.success : Theme.accentFill)
                     .disabled(!model.canCommit && !justCommitted)
 
@@ -95,7 +95,7 @@ struct CommitComposer: View {
                             .frame(width: 30, height: 32)
                     }
                     .menuStyle(.button)
-                    .buttonStyle(.glassProminent)
+                    .adaptiveButtonStyle(prominent: true)
                     .tint(justCommitted ? Theme.success : Theme.accentFill)
                     .menuIndicator(.hidden)
                     .fixedSize()
@@ -105,9 +105,7 @@ struct CommitComposer: View {
             }
             .help("Commit (⌘↩), Commit a Push (⌥⌘↩)")
         }
-        .padding(12)
-        .glassEffect(.regular, in: .rect(cornerRadius: 20))
-        .padding(10)
+        .modifier(ComposerChrome())
     }
 
     private var authorName: String {
@@ -150,7 +148,7 @@ private struct SuggestMessageButton: View {
                 Image(systemName: "sparkles")
             }
         }
-        .buttonStyle(.glass)
+        .adaptiveButtonStyle()
         .tint(Theme.accentDeep)
         .disabled(!model.isSuggestingMessage && !model.canSuggestMessage)
         .help(helpText(status))
@@ -164,6 +162,27 @@ private struct SuggestMessageButton: View {
             return model.includedChanges.isEmpty ? "Vyber soubory, ze kterých se má zpráva navrhnout" : "Navrhnout zprávu z vybraných změn (⌥⌘G)"
         case let .unavailable(reason):
             return "Návrh zprávy vyžaduje Apple Intelligence. \(reason)"
+        }
+    }
+}
+
+/// Revision: plovoucí skleněná karta. Klasický styl: spodní lišta se systémovým materiálem
+/// a oddělovací čarou, jako mají formuláře v systémových aplikacích.
+private struct ComposerChrome: ViewModifier {
+    @Environment(\.interfaceStyle) private var style
+
+    func body(content: Content) -> some View {
+        switch style {
+        case .revision:
+            content
+                .padding(12)
+                .glassEffect(.regular, in: .rect(cornerRadius: 20))
+                .padding(10)
+        case .classic:
+            content
+                .padding(12)
+                .background(.bar)
+                .overlay(alignment: .top) { Divider() }
         }
     }
 }
