@@ -13,13 +13,17 @@ struct BranchesList: View {
         let remote = model.branches.filter { $0.isRemote && matches($0) }
 
         List(selection: $model.selectedBranchID) {
-            Section("Lokální") {
+            // Nadpisy skupin jsou obyčejné řádky, ne záhlaví sekcí (viz ChangesList – přilepené
+            // záhlaví se pod lištou občas nafoukne a vznikne prázdná díra).
+            Section {
+                BranchGroupTitle("Lokální")
                 ForEach(local) { branch in
                     BranchRow(branch: branch).tag(branch.id)
                 }
             }
             if !remote.isEmpty {
-                Section("Vzdálené") {
+                Section {
+                    BranchGroupTitle("Vzdálené")
                     ForEach(remote) { branch in
                         BranchRow(branch: branch).tag(branch.id)
                     }
@@ -55,7 +59,7 @@ struct BranchesList: View {
             }
             .padding(12)
         }
-        .scrollEdgeEffectStyle(.soft, for: .bottom)
+        .scrollEdgeEffectStyle(.soft, for: .vertical)
         .onAppear {
             if model.selectedBranchID == nil { model.selectedBranchID = model.branches.first(where: \.isCurrent)?.id }
         }
@@ -198,5 +202,20 @@ struct BranchDetail: View {
             parts.append(track.replacingOccurrences(of: "ahead", with: "napřed o").replacingOccurrences(of: "behind", with: "pozadu o"))
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// Nadpis skupiny větví jako běžný (nevybíratelný) řádek seznamu.
+private struct BranchGroupTitle: View {
+    let title: String
+    init(_ title: String) { self.title = title }
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(Theme.textSecondary)
+            .padding(.top, 6)
+            .listRowSeparator(.hidden)
+            .accessibilityAddTraits(.isHeader)
     }
 }

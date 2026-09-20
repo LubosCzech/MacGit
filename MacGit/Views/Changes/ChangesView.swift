@@ -20,7 +20,17 @@ struct ChangesList: View {
                 let changes = filtered(model.changes(in: changelist))
                 let isActive = changelist.id == model.workspace.activeChangelistID
                 if !changes.isEmpty || isActive || model.workspace.changelists.count > 1 {
+                    // Záhlaví changelistu je obyčejný první řádek, ne záhlaví sekce: přilepené
+                    // záhlaví sekce SwiftUI občas nafoukne o výšku lišty nad seznamem a pod ním
+                    // pak zůstane prázdná díra.
                     Section {
+                        ChangelistHeader(model: model, changelist: changelist, changes: changes)
+                            .dropDestination(for: String.self) { paths, _ in
+                                model.move(paths: paths, to: changelist.id)
+                                return true
+                            }
+                            .listRowSeparator(.hidden)
+                            .padding(.top, 2)
                         if asTree {
                             FileTreeRows(model: model, nodes: model.fileTree(for: changes), toggled: $toggledFolders, discard: { pendingDiscard = $0 })
                         } else {
@@ -32,12 +42,6 @@ struct ChangesList: View {
                                     .listRowInsets(EdgeInsets(top: 1, leading: 10, bottom: 1, trailing: 10))
                             }
                         }
-                    } header: {
-                        ChangelistHeader(model: model, changelist: changelist, changes: changes)
-                            .dropDestination(for: String.self) { paths, _ in
-                                model.move(paths: paths, to: changelist.id)
-                                return true
-                            }
                     }
                 }
             }
@@ -62,12 +66,6 @@ struct ChangesList: View {
                 GitignoreBanner(model: model)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !model.status.changes.isEmpty || model.amend {
-                CommitComposer(model: model)
-            }
-        }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .confirmationDialog(
             pendingDiscard.count == 1 ? "Zahodit změny v souboru \(pendingDiscard[0].fileName)?" : "Zahodit změny v \(pendingDiscard.count) souborech?",
             isPresented: Binding(get: { !pendingDiscard.isEmpty }, set: { if !$0 { pendingDiscard = [] } })

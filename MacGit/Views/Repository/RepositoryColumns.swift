@@ -9,17 +9,39 @@ struct RepositoryContentColumn: View {
     @AppStorage("changesAsTree") private var changesAsTree = false
     @Environment(\.interfaceStyle) private var style
 
+    @ViewBuilder
+    private func sectionList(_ section: RepositoryModel.Section) -> some View {
+        switch section {
+        case .changes: ChangesList(model: model)
+        case .history: HistoryList(model: model)
+        case .branches: BranchesList(model: model)
+        case .shelf: ShelfList(model: model)
+        }
+    }
+
     var body: some View {
-        Group {
-            switch model.section {
-            case .changes: ChangesList(model: model)
-            case .history: HistoryList(model: model)
-            case .branches: BranchesList(model: model)
-            case .shelf: ShelfList(model: model)
+        // Všechny čtyři seznamy existují od začátku a přepíná se jen jejich viditelnost.
+        // Seznam vytvořený až za běhu totiž od SwiftUI dostane místo pro lištu dvakrát
+        // (neviditelný první řádek + odsazení scroll view) a nad obsahem zůstane díra;
+        // seznamy vzniklé spolu s oknem tuhle chybu nemají.
+        ZStack {
+            ForEach(RepositoryModel.Section.allCases) { section in
+                let isVisible = model.section == section
+                sectionList(section)
+                    .opacity(isVisible ? 1 : 0)
+                    .allowsHitTesting(isVisible)
+                    .accessibilityHidden(!isVisible)
             }
         }
         .scrollContentBackground(.hidden)
         .frame(maxHeight: .infinity)
+        // Commit panel je spodní lišta sloupce – na stejné úrovni jako horní lišta, jinak
+        // systém spodní okraj nekreslí měkce, ale jako zamlženou plochu s linkou.
+        .glassFooter {
+            if model.section == .changes && (!model.status.changes.isEmpty || model.amend) {
+                CommitComposer(model: model)
+            }
+        }
         .glassHeader {
             switch style {
             case .revision:

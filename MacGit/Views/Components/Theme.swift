@@ -115,8 +115,13 @@ private enum Brandish {
     static let warning = dynamic(light: 0x8A5A00, dark: 0xE8B45C)
     static let info = dynamic(light: 0x0F52E8, dark: 0x63D7FF)
 
-    static func dynamic(light: UInt32, lightAlpha: Double = 1, dark: UInt32, darkAlpha: Double = 1) -> Color {
-        Color(nsColor: NSColor(name: nil) { appearance in
+    /// Dynamická barva pro světlý/tmavý vzhled.
+    ///
+    /// `nonisolated` + `@Sendable`: SwiftUI barvu dopočítává i na svém vykreslovacím vlákně,
+    /// ne jen na hlavním. Uzávěra zděděná z výchozí izolace `MainActor` by tam aplikaci shodila
+    /// (kontrola izolace ve Swift 6). Počítá se jen z konstant, takže je to bezpečné.
+    nonisolated static func dynamic(light: UInt32, lightAlpha: Double = 1, dark: UInt32, darkAlpha: Double = 1) -> Color {
+        Color(nsColor: NSColor(name: nil) { @Sendable appearance in
             let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             return NSColor(hex: isDark ? dark : light, alpha: isDark ? darkAlpha : lightAlpha)
         })
@@ -124,7 +129,7 @@ private enum Brandish {
 }
 
 extension NSColor {
-    fileprivate convenience init(hex: UInt32, alpha: Double) {
+    nonisolated fileprivate convenience init(hex: UInt32, alpha: Double) {
         self.init(
             srgbRed: CGFloat((hex >> 16) & 0xFF) / 255,
             green: CGFloat((hex >> 8) & 0xFF) / 255,

@@ -115,12 +115,87 @@ private struct GlassHeader<Bar: View>: ViewModifier {
                 .safeAreaBar(edge: .top, spacing: 0) {
                     bar.frame(maxWidth: .infinity)
                 }
-                .scrollEdgeEffectStyle(.soft, for: .top)
+                // Obě hrany najednou: pozdější `scrollEdgeEffectStyle` pro jednu hranu by
+                // nastavení druhé přebil a spodní lišta by dostala tvrdý okraj s linkou.
+                .scrollEdgeEffectStyle(.soft, for: .vertical)
         case .classic:
             VStack(spacing: 0) {
                 bar
                 content
             }
+        }
+    }
+}
+
+// MARK: - Lišta pod rolovaným obsahem
+
+extension View {
+    /// Lišta pod rolovaným obsahem (commit panel). Revision: bez vlastního pozadí, obsah pod ni
+    /// zajíždí a systémový scroll edge effect ho u spodního okraje rozostří – stejně jako lišta
+    /// nahoře. Klasický styl: lišta stojí pevně pod obsahem.
+    func glassFooter<Bar: View>(@ViewBuilder _ bar: () -> Bar) -> some View {
+        modifier(GlassFooter(bar: bar()))
+    }
+
+    /// Vstupní pole na liště: v Revision skleněné, v klasickém stylu systémová plocha s linkou.
+    func adaptiveFieldBackground(cornerRadius: CGFloat = 10) -> some View {
+        modifier(AdaptiveFieldBackground(cornerRadius: cornerRadius))
+    }
+}
+
+private struct GlassFooter<Bar: View>: ViewModifier {
+    let bar: Bar
+    @Environment(\.interfaceStyle) private var style
+    @State private var barHeight: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        switch style {
+        case .revision:
+            // Systémový okraj rolování na spodní hraně macOS kreslí vždy „tvrdě“ – rovnoměrné
+            // rozmazání s linkou, i když je nastavený měkký styl. Místo něj obsah u spodní lišty
+            // plynule vybledne do plátna: bez čáry a bez tónu, stejně jako měkký okraj nahoře.
+            content
+                .scrollEdgeEffectHidden(true, for: .bottom)
+                .mask { fadeMask }
+                .safeAreaBar(edge: .bottom, spacing: 0) {
+                    bar
+                        .frame(maxWidth: .infinity)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { barHeight = $0 }
+                }
+        case .classic:
+            content
+                .safeAreaInset(edge: .bottom, spacing: 0) { bar }
+        }
+    }
+
+    /// Maska obsahu (její rámec končí u horní hrany lišty): plná, a posledních pár bodů
+    /// nad lištou plynule do ztracena. Pod lištou pak obsah není vidět vůbec.
+    @ViewBuilder
+    private var fadeMask: some View {
+        if barHeight > 1 {
+            VStack(spacing: 0) {
+                Rectangle()
+                LinearGradient(colors: [.black, .black.opacity(0)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 36)
+            }
+        } else {
+            Rectangle()
+        }
+    }
+}
+
+private struct AdaptiveFieldBackground: ViewModifier {
+    let cornerRadius: CGFloat
+    @Environment(\.interfaceStyle) private var style
+
+    func body(content: Content) -> some View {
+        switch style {
+        case .revision:
+            content.glassEffect(.regular.interactive(), in: .rect(cornerRadius: cornerRadius))
+        case .classic:
+            content
+                .background(Theme.surfaceRaised, in: .rect(cornerRadius: cornerRadius))
+                .overlay { RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(Theme.hairline) }
         }
     }
 }

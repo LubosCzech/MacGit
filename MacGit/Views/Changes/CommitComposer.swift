@@ -21,8 +21,7 @@ struct CommitComposer: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 12.5))
                     .padding(9)
-                    .background(Theme.surfaceRaised.opacity(0.85), in: .rect(cornerRadius: 9))
-                    .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline) }
+                    .adaptiveFieldBackground()
                     .disabled(model.isSuggestingMessage)
                     .accessibilityLabel("Shrnutí commitu")
                 SuggestMessageButton(model: model)
@@ -37,8 +36,7 @@ struct CommitComposer: View {
                 .textFieldStyle(.plain)
                 .font(.system(size: 12))
                 .padding(9)
-                .background(Theme.surfaceRaised.opacity(0.85), in: .rect(cornerRadius: 9))
-                .overlay { RoundedRectangle(cornerRadius: 9).strokeBorder(Theme.hairline) }
+                .adaptiveFieldBackground()
                 .disabled(model.isSuggestingMessage)
                 .lineLimit(2...8)
                 .accessibilityLabel("Popis commitu")
@@ -166,18 +164,19 @@ private struct SuggestMessageButton: View {
     }
 }
 
-/// Revision: plovoucí skleněná karta. Klasický styl: spodní lišta se systémovým materiálem
-/// a oddělovací čarou, jako mají formuláře v systémových aplikacích.
+/// Revision: panel bez karty na průhledné liště (obsah pod ním zajíždí a rozmaže se).
+/// Klasický styl: spodní lišta se systémovým materiálem a oddělovací čarou.
 private struct ComposerChrome: ViewModifier {
     @Environment(\.interfaceStyle) private var style
 
     func body(content: Content) -> some View {
         switch style {
         case .revision:
+            // Bez karty: panel leží přímo na plátně a seznam pod ním zajíždí (viz glassFooter).
             content
-                .padding(12)
-                .glassEffect(.regular, in: .rect(cornerRadius: 20))
-                .padding(10)
+                .padding(.horizontal, 14)
+                .padding(.top, 10)
+                .padding(.bottom, 12)
         case .classic:
             content
                 .padding(12)
