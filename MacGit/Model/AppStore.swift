@@ -184,6 +184,33 @@ final class AppStore {
         GitContext.credential(credential(for: auth, projectID: projectID), askpassPath: askpassPath)
     }
 
+    /// Přihlášení pro push do vedlejšího remotu (např. zrcadla na GitLabu).
+    ///
+    /// Údaje projektu patří k jeho hlavnímu serveru: token ani heslo nikdy nepošleme jinému
+    /// hostu. Pro cizí server použijeme uložený účet se stejným hostem, jinak systémové
+    /// přihlášení (ssh-agent, ~/.ssh/config, Klíčenka gitu).
+    func context(forPushTo targetHost: String?, primaryHost: String?, auth: ProjectAuth, projectID: UUID?) -> GitContext {
+        switch auth {
+        case .system:
+            return context(for: .system, projectID: projectID)
+        case .sshKey:
+            // SSH klíč se serveru neprozradí – jen jím podepíše; GitLab ho případně odmítne.
+            return context(for: auth, projectID: projectID)
+        case let .account(accountID):
+            if let account = accounts.first(where: { $0.id == accountID }), account.host == targetHost {
+                return context(for: auth, projectID: projectID)
+            }
+        case .password:
+            if let targetHost, targetHost == primaryHost {
+                return context(for: auth, projectID: projectID)
+            }
+        }
+        if let targetHost, let account = accounts.first(where: { $0.host == targetHost }) {
+            return context(for: .account(account.id), projectID: projectID)
+        }
+        return context(for: .system, projectID: projectID)
+    }
+
     func credential(for auth: ProjectAuth, projectID: UUID?) -> GitCredential {
         switch auth {
         case .system:

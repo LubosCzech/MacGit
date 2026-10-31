@@ -114,13 +114,7 @@ private struct ClassicToolbar: ToolbarContent {
             .badge(model.status.branch.behind)
             .help("Pull (⌘T)")
 
-            Button {
-                Task { await model.push() }
-            } label: {
-                Label("Push", systemImage: "arrow.up")
-            }
-            .badge(model.status.branch.ahead)
-            .help(model.status.branch.upstream == nil ? "Push a nastavit upstream (⇧⌘K)" : "Push do \(model.status.branch.upstream ?? "") (⇧⌘K)")
+            PushToolbarButton(model: model)
         }
 
         ToolbarItem(placement: .primaryAction) {

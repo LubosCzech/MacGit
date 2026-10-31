@@ -27,6 +27,9 @@ targets:
       - path: MacGit
     dependencies:
       - package: GitKit
+      # Sparkle je ověřená binárka ve Vendor/ (scripts/fetch-sparkle.sh, SHA-256 připnuté).
+      - framework: Vendor/Sparkle-2.9.6/Sparkle.framework
+        embed: true
     info:
       path: MacGit/Info.plist
       properties:
@@ -36,7 +39,18 @@ targets:
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         LSApplicationCategoryType: public.app-category.developer-tools
-        NSHumanReadableCopyright: "© 2026 Luboš Světík"
+        NSHumanReadableCopyright: "© 2026 svtk.dev"
+        # Aktualizace (Sparkle). Adresu a klíč doplní build.sh z release.env; vývojové
+        # buildy z Xcode je nemají, takže se nikdy neaktualizují z vydaných verzí.
+        SUFeedURL: "$(REVISION_FEED_URL)"
+        SUPublicEDKey: "$(REVISION_ED_KEY)"
+        SUVerifyUpdateBeforeExtraction: true
+        SURequireSignedFeed: true
+        # Kontroly jsou volitelné; instalaci vždy potvrzuje uživatel.
+        SUEnableAutomaticChecks: false
+        SUAllowsAutomaticUpdates: false
+        SUSendProfileInfo: false
+        SUScheduledCheckInterval: 86400
     entitlements:
       path: MacGit/MacGit.entitlements
       properties:
@@ -49,6 +63,9 @@ targets:
         ENABLE_HARDENED_RUNTIME: YES
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        REVISION_FEED_URL: ""
+        REVISION_ED_KEY: ""
 schemes:
   Revision:
     build:

@@ -61,6 +61,25 @@ struct ParserTests {
 }
 
 /// Integrační testy nad skutečným gitem v dočasném adresáři.
+@Suite struct ProtectedBranchErrorTests {
+    @Test func explainsGitLabProtectedBranch() {
+        let output = """
+        remote: GitLab: You are not allowed to push code to protected branches on this project.
+        To gitlab.deepgaming.eu:deepgaming/folio.git
+         ! [remote rejected] main -> main (pre-receive hook declined)
+        error: failed to push some refs to 'gitlab.deepgaming.eu:deepgaming/folio.git'
+        """
+        let summary = GitErrorSummary.make(from: output)
+        #expect(summary.title == "Větev je na serveru chráněná")
+        #expect(summary.details.contains("pre-receive hook declined"))
+    }
+
+    @Test func plainRejectionStillSuggestsPull() {
+        let summary = GitErrorSummary.make(from: " ! [rejected]        main -> main (fetch first)\nerror: failed to push some refs")
+        #expect(summary.title == "Push byl odmítnut")
+    }
+}
+
 struct RepositoryTests {
     let dir: URL
     let repo: GitRepository
@@ -86,6 +105,33 @@ struct RepositoryTests {
 
     func read(_ name: String) -> String? {
         try? String(contentsOf: dir.appendingPathComponent(name), encoding: .utf8)
+    }
+
+    @Test func pushesToSecondRemoteWithoutChangingUpstream() async throws {
+        // Dva holé repozitáře: „origin“ (hlavní) a „mirror“ (např. GitLab).
+        let origin = dir.appendingPathExtension("origin.git")
+        let mirror = dir.appendingPathExtension("mirror.git")
+        let runner = GitRunner()
+        for bare in [origin, mirror] {
+            try await runner.run(["init", "--bare", bare.path], in: nil)
+        }
+        let head = try await repo.status().branch.head ?? "main"
+        try await repo.addRemote(name: "origin", url: origin.path)
+        try await repo.addRemote(name: "mirror", url: mirror.path)
+        try await repo.push(branch: try await repo.status().branch)
+        try await runner.run(["tag", "v1.0"], in: dir)
+
+        try await repo.push(branch: head, toRemote: "mirror", includeTags: false, context: .none)
+        let mirrorRefs = try await runner.run(["ls-remote", "mirror"], in: dir).output
+        #expect(mirrorRefs.contains("refs/heads/\(head)"))
+        #expect(!mirrorRefs.contains("refs/tags/v1.0"))
+        // Upstream zůstává na hlavním remotu.
+        #expect(try await repo.status().branch.upstream == "origin/\(head)")
+
+        try await repo.push(branch: head, toRemote: "mirror", includeTags: true, context: .none)
+        let withTags = try await runner.run(["ls-remote", "mirror"], in: dir).output
+        #expect(withTags.contains("refs/tags/v1.0"))
+        #expect(try await repo.status().branch.upstream == "origin/\(head)")
     }
 
     @Test func commitsOnlySelectedFiles() async throws {

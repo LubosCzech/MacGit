@@ -115,14 +115,7 @@ struct WindowToolbar: ToolbarContent {
                 .badge(model.status.branch.behind)
                 .help("Pull (⌘T)")
 
-                Button {
-                    Task { await model.push() }
-                } label: {
-                    Label("Push", systemImage: "arrow.up")
-                        .symbolEffect(.bounce, value: model.status.branch.ahead)
-                }
-                .badge(model.status.branch.ahead)
-                .help(model.status.branch.upstream == nil ? "Push a nastavit upstream (⇧⌘K)" : "Push do \(model.status.branch.upstream ?? "") (⇧⌘K)")
+                PushToolbarButton(model: model, animatesSymbol: true)
             }
 
             // Pravá skupina patří k pravému okraji okna, ne hned za synchronizaci.

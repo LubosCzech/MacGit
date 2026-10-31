@@ -54,6 +54,11 @@ public struct GitErrorSummary: Sendable, Equatable {
         Known(needles: ["Could not resolve host", "Connection timed out", "Network is unreachable", "Operation timed out"],
               title: "Server není dostupný",
               explanation: "Nepodařilo se spojit se serverem. Zkontroluj připojení k internetu nebo VPN."),
+        // Musí být před obecným „[rejected]“: odmítnutí kvůli oprávnění se pullem nespraví.
+        Known(needles: ["not allowed to push code to protected branches", "not allowed to force push code to a protected branch",
+                        "Protected branch update failed", "GH006"],
+              title: "Větev je na serveru chráněná",
+              explanation: "Do této větve nemáš na serveru právo pushovat. GitLab ve výchozím stavu chrání hlavní větev hned po prvním pushi a pushovat do ní pak smí jen Maintainer. Požádej správce projektu o povolení (Settings → Repository → Protected branches), nebo pošli změny do jiné větve a otevři merge request."),
         Known(needles: ["Updates were rejected because the tip of your current branch is behind", "[rejected]", "non-fast-forward"],
               title: "Push byl odmítnut",
               explanation: "Na serveru jsou novější commity. Nejdřív udělej Pull a pak push zopakuj."),

@@ -364,7 +364,9 @@ final class RepositoryModel {
 
     // MARK: Operations
 
-    private func perform(_ title: String, success: String? = nil, _ work: @escaping () async throws -> Void) async {
+    /// - Parameter remote: remote, se kterým operace mluví – podle něj se ověřuje klíč serveru
+    ///   (jinak hlavní remote).
+    private func perform(_ title: String, success: String? = nil, remote: Remote? = nil, _ work: @escaping () async throws -> Void) async {
         busyTitle = title
         do {
             try await work()
@@ -372,12 +374,13 @@ final class RepositoryModel {
             if let success { showToast(success) }
         } catch {
             busyTitle = nil
-            if let problem = HostKeyTrust.problem(in: error), let endpoint = sshEndpoint {
+            let endpoint = remote.flatMap { SSHEndpoint.from(remote: $0.pushURL) ?? SSHEndpoint.from(remote: $0.fetchURL) } ?? sshEndpoint
+            if let problem = HostKeyTrust.problem(in: error), let endpoint {
                 hostTrustRequest = HostTrustRequest(
                     endpoint: endpoint,
                     problem: problem,
                     message: error.localizedDescription,
-                    retry: { [weak self] in await self?.perform(title, success: success, work) }
+                    retry: { [weak self] in await self?.perform(title, success: success, remote: remote, work) }
                 )
             } else if SSHKeyManager.isKeyUnavailable(error), let request = makeUnlockRequest(error: error, title: title, success: success, work: work) {
                 sshUnlockRequest = request
@@ -618,6 +621,31 @@ final class RepositoryModel {
         await perform("Push…", success: "Push dokončen") { [self] in
             try await repository.push(branch: status.branch, force: force)
         }
+    }
+
+    /// Pošle aktuální větev do zvoleného remotu – typicky občasná verze do zrcadla na GitLabu.
+    /// Upstream se nemění, běžný Push dál míří na hlavní remote.
+    func push(to remote: Remote, includeTags: Bool) async {
+        guard let head = status.branch.head else { return }
+        let context = pushContext(for: remote)
+        let success = includeTags ? "\(head) a tagy poslány do \(remote.name)" : "\(head) poslána do \(remote.name)"
+        await perform("Push do \(remote.name)…", success: success, remote: remote) { [self] in
+            try await repository.push(branch: head, toRemote: remote.name, includeTags: includeTags, context: context)
+        }
+    }
+
+    /// Remote, se kterým je aktuální větev propojená (upstream), např. „origin“.
+    var upstreamRemoteName: String? {
+        guard let upstream = status.branch.upstream else { return nil }
+        return remotes.map(\.name).first { upstream.hasPrefix($0 + "/") }
+    }
+
+    private func pushContext(for remote: Remote) -> GitContext {
+        guard let store else { return repository.networkContext }
+        let target = HostingClient.parseRemote(remote.pushURL)?.host
+        let primaryURL = (remotes.first { $0.name == upstreamRemoteName } ?? remotes.first { $0.name == "origin" } ?? remotes.first)?.pushURL
+        let primary = primaryURL.flatMap { HostingClient.parseRemote($0)?.host }
+        return store.context(forPushTo: target, primaryHost: primary, auth: project.auth, projectID: project.id)
     }
 
     func checkout(_ branch: Branch) async {

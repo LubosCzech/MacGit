@@ -5,3 +5,11 @@ DerivedData/
 xcuserdata/
 .DS_Store
 .swiftpm/
+dist/
+Vendor/
+release.local.env
+*.p12
+*.p8
+*.pem
+*.key
+__pycache__/

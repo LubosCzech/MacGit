@@ -283,6 +283,16 @@ public struct GitRepository: Sendable {
         try await git(args, network: true)
     }
 
+    /// Pošle větev do konkrétního remotu (např. zrcadlo na GitLabu) pod stejným jménem.
+    ///
+    /// Na rozdíl od `push(branch:)` nikdy nemění upstream – hlavní remote zůstává hlavní.
+    /// `context` je samostatný, protože přihlášení projektu patří k jeho hlavnímu serveru.
+    public func push(branch head: String, toRemote remote: String, includeTags: Bool, context: GitContext) async throws {
+        var args = ["push", remote, "refs/heads/\(head):refs/heads/\(head)"]
+        if includeTags { args.append("--tags") }
+        try await runner.run(args, in: url, context: context)
+    }
+
     // MARK: Remotes
 
     public func remotes() async throws -> [Remote] {

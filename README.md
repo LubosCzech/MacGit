@@ -32,9 +32,24 @@ Vzhled řídí sémantické tokeny v `MacGit/Views/Components/Theme.swift` – k
 ## Build
 
 ```bash
+bash scripts/fetch-sparkle.sh   # jednou: ověřený Sparkle do Vendor/
 xcodegen generate
 xcodebuild -project Revision.xcodeproj -scheme Revision -derivedDataPath build build
 open build/Build/Products/Debug/Revision.app
 ```
+
+Testy všech sad najednou: `bash scripts/run-tests.sh`.
+
+## Vydání a aktualizace
+
+Aktualizace běží přes Sparkle (podepsaný appcast na GitHub Releases), aplikace se podepisuje Developer ID a notarizuje. Každé vydání má git tag `v<verze>`.
+
+```bash
+bash scripts/new-release.sh 1.0      # testy, commit verze, tag v1.0, build, notarizace, draft
+bash scripts/new-release.sh publish  # zveřejnit až po vyzkoušení aktualizace
+bash scripts/new-release.sh status   # kde vydání stojí
+```
+
+Podrobnosti v [UPDATES.md](UPDATES.md), poznámky k vydání v [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 Aplikace záměrně neběží v sandboxu (spouští `git`, `ssh`, `gpg`).

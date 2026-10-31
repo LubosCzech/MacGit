@@ -2,6 +2,7 @@ import SwiftUI
 import GitKit
 
 struct SettingsView: View {
+    @Environment(UpdateService.self) private var updates
     @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
     @AppStorage(InterfaceStyle.storageKey) private var interfaceStyle: InterfaceStyle = .revision
 
@@ -37,6 +38,7 @@ struct SettingsView: View {
             Tab("Účty", systemImage: "person.crop.circle") { AccountsSettings() }
             Tab("SSH klíče", systemImage: "key") { SSHKeysSettings() }
             Tab("Git", systemImage: "arrow.triangle.branch") { GitSettings() }
+            Tab("Aktualizace", systemImage: "arrow.down.circle") { UpdateSettingsView(updates: updates) }
         }
         .frame(width: 640, height: 520)
     }

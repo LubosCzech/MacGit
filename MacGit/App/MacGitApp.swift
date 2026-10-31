@@ -3,6 +3,8 @@ import SwiftUI
 @main
 struct RevisionApp: App {
     @State private var store = AppStore()
+    @State private var updates = UpdateService()
+    @State private var support = SupportService()
     @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
     @AppStorage(InterfaceStyle.storageKey) private var interfaceStyle: InterfaceStyle = .revision
 
@@ -18,13 +20,21 @@ struct RevisionApp: App {
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)
                 .frame(minWidth: 1040, minHeight: 620)
+                .sheet(isPresented: Binding(get: { support.isPrompting }, set: { support.isPrompting = $0 })) {
+                    SupportPromptView(support: support)
+                }
+                .task {
+                    // Až když má uživatel okno před sebou, ne hned při startu.
+                    try? await Task.sleep(for: .seconds(3))
+                    support.promptIfDue()
+                }
                 #if DEBUG
                 .onAppear { DebugSnapshots.runIfRequested(store: store) }
                 #endif
         }
         .defaultSize(width: 1440, height: 900)
         .windowToolbarStyle(.unified)
-        .commands { RevisionCommands(store: store) }
+        .commands { RevisionCommands(store: store, updates: updates) }
 
         WindowGroup("AI review", id: "review", for: ReviewWindowValue.self) { $value in
             ReviewWindow(value: value)
@@ -39,6 +49,7 @@ struct RevisionApp: App {
         Settings {
             SettingsView()
                 .environment(store)
+                .environment(updates)
                 .environment(\.interfaceStyle, interfaceStyle)
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)
@@ -49,12 +60,25 @@ struct RevisionApp: App {
 /// Každá akce z toolbaru má i položku v menu (HIG).
 struct RevisionCommands: Commands {
     let store: AppStore
+    let updates: UpdateService
     @FocusedValue(\.repositoryModel) private var model
     @AppStorage("changesAsTree") private var changesAsTree = false
     @AppStorage("diffLayoutMode") private var diffMode: DiffLayoutMode = .unified
     @AppStorage("sidebarShown") private var sidebarShown = true
 
     var body: some Commands {
+        CommandGroup(replacing: .appInfo) {
+            Button("O aplikaci Revision") { AboutWindow.shared.show() }
+        }
+        CommandGroup(after: .appInfo) {
+            Button("Zkontrolovat aktualizace…") { updates.check() }
+                .disabled(!updates.canCheck)
+        }
+        CommandGroup(replacing: .help) {
+            Link("Kávu pro vývojáře…", destination: SupportLink.page)
+            Link("svtk.dev", destination: SupportLink.studio)
+        }
+
         CommandGroup(after: .newItem) {
             Button("Klonovat repozitář…") { store.presentedSheet = .clone }
                 .keyboardShortcut("n", modifiers: [.command, .shift])
@@ -118,6 +142,10 @@ struct RevisionCommands: Commands {
             Button("Pull s rebase") { if let model { Task { await model.pull(rebase: true) } } }
             Button("Push") { if let model { Task { await model.push() } } }
                 .keyboardShortcut("k", modifiers: [.command, .shift])
+            Menu("Push do") {
+                if let model { PushToMenuItems(model: model) }
+            }
+            .disabled(model == nil)
             Button("Force push (with lease)") { if let model { Task { await model.push(force: true) } } }
             Divider()
             Button("Nová větev…") { model?.promptNewBranch(from: nil) }
