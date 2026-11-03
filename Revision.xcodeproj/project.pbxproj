@@ -10,11 +10,13 @@
 		03B00E609F77B3DF2EA27247 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9521270F316347DD03C2B25 /* SidebarView.swift */; };
 		04074E8AD1E5DE5462CBA322 /* ReviewCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE46CB9B9A9B8FB5456FD7FB /* ReviewCenter.swift */; };
 		12032AC2D6871C992762C4C0 /* SearchOrb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35E490E629137DC6465A8A75 /* SearchOrb.swift */; };
+		17B6B57B8A47D8EAC6AB7742 /* BackupSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 423E4375622578CB44DFFD3F /* BackupSettingsView.swift */; };
 		1A7266421955C675BC6BBAF3 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F48B1DC8A8D7024AA96C4FB /* UpdateService.swift */; };
 		1AACA7EB7A87DF8D7029B5D2 /* RepositoryColumns.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1DB41BB2218156FD458CD9A /* RepositoryColumns.swift */; };
 		202277F0B13717ECDADBF2CE /* ErrorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5CBE9E2D2175C5DE0605B8C /* ErrorSheet.swift */; };
 		21EC307DF0B399B7D5DAE541 /* GitKit in Frameworks */ = {isa = PBXBuildFile; productRef = C651256C3B671EAF62F6C9E9 /* GitKit */; };
 		22F1F2584B2D3BDB4D20D932 /* BranchesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5BD95E15379E2C327E6D895 /* BranchesView.swift */; };
+		281CACE495F94DDFBFA3BF6D /* BackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6470F7E60809234AEFC1C4FA /* BackupService.swift */; };
 		2E4322CD33C7F815A1449360 /* ChangesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA74BFC7E30FCB21A86C7A40 /* ChangesView.swift */; };
 		2F9FA2AE5D46D31E0E6ADFF3 /* ReviewViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8999EE5B34414894F031D153 /* ReviewViews.swift */; };
 		3BF097EE43918CD571067261 /* ReviewInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F83005AADA04E183086F7EA /* ReviewInspector.swift */; };
@@ -85,9 +87,11 @@
 		37C06C516FBA2EFC8B18052C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3A1C1D084231D00A89956E05 /* StartReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartReviewSheet.swift; sourceTree = "<group>"; };
 		41C4078285A2B5BC956E18D8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		423E4375622578CB44DFFD3F /* BackupSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupSettingsView.swift; sourceTree = "<group>"; };
 		43635A87A7B946B97FACAD06 /* RepositoryInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryInspector.swift; sourceTree = "<group>"; };
 		50251776A15457121554A02C /* RepositoryWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryWatcher.swift; sourceTree = "<group>"; };
 		505CE9AE554F722223BEEF8D /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = "Vendor/Sparkle-2.9.6/Sparkle.framework"; sourceTree = "<group>"; };
+		6470F7E60809234AEFC1C4FA /* BackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackupService.swift; sourceTree = "<group>"; };
 		64BC9558D4F911487B6B8CF0 /* DebugSnapshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugSnapshots.swift; sourceTree = "<group>"; };
 		6ED30270A3A74B278C18775A /* AppMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMigration.swift; sourceTree = "<group>"; };
 		74C5206C8E4FFBD965868EAB /* GitKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = GitKit; path = Packages/GitKit; sourceTree = SOURCE_ROOT; };
@@ -230,6 +234,7 @@
 		73DC4BE2998A8CCCCAACE050 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				423E4375622578CB44DFFD3F /* BackupSettingsView.swift */,
 				108159E398BFB75D3735A4BA /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -282,6 +287,7 @@
 			isa = PBXGroup;
 			children = (
 				6ED30270A3A74B278C18775A /* AppMigration.swift */,
+				6470F7E60809234AEFC1C4FA /* BackupService.swift */,
 				0A367936283FFF8AE46ABD89 /* CommitMessageGenerator.swift */,
 				EB55738AFC1A7D124935608D /* GitignoreTemplate.swift */,
 				FFFFF297DC4380245CA4C345 /* Keychain.swift */,
@@ -440,6 +446,8 @@
 				FA670D7161F85685D1395572 /* AppModels.swift in Sources */,
 				7B20570E23E32100AE4F0E0B /* AppStore.swift in Sources */,
 				F1831428A6CE7C17E570B8B2 /* AuthEditor.swift in Sources */,
+				281CACE495F94DDFBFA3BF6D /* BackupService.swift in Sources */,
+				17B6B57B8A47D8EAC6AB7742 /* BackupSettingsView.swift in Sources */,
 				22F1F2584B2D3BDB4D20D932 /* BranchesView.swift in Sources */,
 				F0F1592FC1418D537C125701 /* Brand.swift in Sources */,
 				2E4322CD33C7F815A1449360 /* ChangesView.swift in Sources */,

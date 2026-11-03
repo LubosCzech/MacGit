@@ -2,9 +2,16 @@ import SwiftUI
 
 @main
 struct RevisionApp: App {
-    @State private var store = AppStore()
+    @State private var store: AppStore
+    @State private var backups: BackupService
     @State private var updates = UpdateService()
     @State private var support = SupportService()
+
+    init() {
+        let store = AppStore()
+        _store = State(initialValue: store)
+        _backups = State(initialValue: BackupService(store: store))
+    }
     @AppStorage("revisionAppearance") private var appearance: RevisionAppearance = .system
     @AppStorage(InterfaceStyle.storageKey) private var interfaceStyle: InterfaceStyle = .revision
 
@@ -28,6 +35,14 @@ struct RevisionApp: App {
                     try? await Task.sleep(for: .seconds(3))
                     support.promptIfDue()
                 }
+                .task {
+                    // Denní záloha konfigurace: hned po startu a pak se každou hodinu ověří, jestli je čas.
+                    try? await Task.sleep(for: .seconds(10))
+                    while !Task.isCancelled {
+                        backups.runAutomaticBackupIfDue()
+                        try? await Task.sleep(for: .seconds(3600))
+                    }
+                }
                 #if DEBUG
                 .onAppear { DebugSnapshots.runIfRequested(store: store) }
                 #endif
@@ -50,6 +65,7 @@ struct RevisionApp: App {
             SettingsView()
                 .environment(store)
                 .environment(updates)
+                .environment(backups)
                 .environment(\.interfaceStyle, interfaceStyle)
                 .preferredColorScheme(appearance.colorScheme)
                 .tint(Theme.accent)

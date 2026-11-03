@@ -15,13 +15,16 @@ Nativní git klient pro macOS 26+ (SwiftUI, Liquid Glass), české UI. Dříve p
 - **Přihlášení** – systémové (ssh-agent), konkrétní SSH klíč (+ passphrase), token účtu GitHub/GitLab, uživatel + heslo. Tajné údaje jsou v Klíčence, do gitu se předávají přes `GIT_ASKPASS` / `SSH_ASKPASS`.
 - **GitHub / GitLab** (i self-hosted) – ověření tokenu, výpis a klonování repozitářů, nahrání SSH klíče, odkaz na nový PR/MR.
 - Historie s diffy, větve (checkout, merge, přejmenování, mazání i na serveru), remoty, generování Ed25519 klíčů, sledování změn přes FSEvents.
+- **Push do…** libovolného remotu (např. občasná verze do zrcadla na GitLabu) bez změny upstreamu.
+- **AI review** větví a commitů přes CLI agenty, návrh commit zprávy přes Apple Intelligence.
+- **Zálohy konfigurace** – automaticky denně, ručně do souboru, hesla volitelně šifrovaná.
 
 ## Značka
 
 Logo, ikona a paleta jsou v `Design/` (`Logo.png`, `AppIcon-source.png`, `ColorPalette.png`).
 Akcentová barva aplikace je Primary Blue `#197BFF` (v tmavém režimu `#4C9DFF`); syrová paleta je v `MacGit/Views/Components/Brand.swift`.
 
-Vzhled řídí sémantické tokeny v `MacGit/Views/Components/Theme.swift` – každý se sám překlápí mezi světlým a tmavým tématem (dynamická `NSColor`), takže v pohledech není žádné větvení podle schématu. Sklo (Liquid Glass) patří jen do ovládací vrstvy, obsah (diff, seznamy) zůstává neprůhledný. Kompletní návrh UI/UX je v `Design/UI-Spec.md`.
+Vzhled řídí sémantické tokeny v `MacGit/Views/Components/Theme.swift` – každý se sám překlápí mezi světlým a tmavým tématem (dynamická `NSColor`), takže v pohledech není žádné větvení podle schématu. Sklo (Liquid Glass) patří jen do ovládací vrstvy, obsah (diff, seznamy) zůstává neprůhledný. Kompletní návrh UI/UX je v [Docs/UI-Spec.md](Docs/UI-Spec.md), pravidla a ověřené záseky v [Docs/UI-Liquid-Glass.md](Docs/UI-Liquid-Glass.md).
 
 ## Struktura
 
@@ -50,6 +53,10 @@ bash scripts/new-release.sh publish  # zveřejnit až po vyzkoušení aktualizac
 bash scripts/new-release.sh status   # kde vydání stojí
 ```
 
-Podrobnosti v [UPDATES.md](UPDATES.md), poznámky k vydání v [RELEASE_NOTES.md](RELEASE_NOTES.md).
+Podrobnosti v [Docs/Vydavani.md](Docs/Vydavani.md), poznámky k vydání v [RELEASE_NOTES.md](RELEASE_NOTES.md).
 
 Aplikace záměrně neběží v sandboxu (spouští `git`, `ssh`, `gpg`).
+
+## Dokumentace
+
+Veškeré know-how (architektura, vývoj, UI, přihlášení, AI, zálohy, vydávání, deník rozhodnutí) je ve složce [Docs/](Docs/README.md).

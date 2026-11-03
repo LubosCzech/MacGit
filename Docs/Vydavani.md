@@ -1,9 +1,10 @@
-# Aktualizace Revision přes Sparkle
+# Vydávání a aktualizace přes Sparkle
 
 ## Aktuální nastavení
 
-- Repozitář: LubosCzech/MacGit (veřejný). Adresa aktualizací je od něj odvozená – **před prvním vydáním** případně přejmenujte repozitář a upravte GITHUB_REPOSITORY; po vydání už ji neměňte.
-- Feed: https://github.com/LubosCzech/MacGit/releases/latest/download/appcast.xml – začne fungovat po prvním zveřejněném vydání.
+- **Vydáno:** v1.0 (build 1) zveřejněná 31. 10. 2026 jako Latest, feed vrací 200 a podpis sedí.
+- Repozitář: LubosCzech/MacGit (veřejný). Adresa aktualizací je od něj odvozená a je zapečená v každé nainstalované kopii – repozitář už **nepřejmenovávat** a GITHUB_REPOSITORY neměnit (GitHub sice přesměruje, ale nespoléhat na to).
+- Feed: https://github.com/LubosCzech/MacGit/releases/latest/download/appcast.xml
 - Sparkle 2.9.6, ověřená binárka ve Vendor/ (SHA-256 připnuté ve scripts/fetch-sparkle.sh), do aplikace se vkládá přes project.yml.
 - RELEASE_MODE=notarized: Developer ID týmu Z47E3LBWRP, notarizační profil sdílený s Nimbem (nimbo-notary). Názvy jsou v gitem ignorovaném release.local.env.
 - Veřejný Ed25519 klíč je v release.env, soukromý v přihlašovací Klíčence pod účtem revision-updates.
@@ -108,3 +109,11 @@ End-to-end test potřebuje dvě vydání: nainstalujte starší nakonfigurované
 - [Sparkle: nastavení a podpisy](https://sparkle-project.org/documentation/)
 - [Apple: bezpečné otevírání aplikací](https://support.apple.com/en-us/102445)
 - [Pravidla App Store](https://developer.apple.com/app-store/review/guidelines/)
+
+## Zkušenosti z prvního vydání (v1.0)
+
+- **Spouštět z kořene projektu.** `bash scripts/new-release.sh 1.0` z jiné složky skončí „No such file or directory“ – nejdřív `cd ~/Projekty/AI/MacGit`.
+- **První vydání** se pozná tak, že `gh api repos/<repo>/releases/latest` selže (žádné Latest). `new-release.sh` pak verzi nezvyšuje, jen otaguje a zavolá `release.sh prepare --first-release`.
+- **Publish spadl na 404** při čekání na `LATEST_TAG`: hned po zveřejnění GitHub ještě chvíli vrací 404, ale vydání bylo v pořádku. Polling v `release.sh` je teď tolerantní (`2>/dev/null … || true`). Pokud publish spadne až v závěrečné kontrole, nejdřív se podívej na GitHub (`gh release list`), než cokoli opakuješ.
+- Nimbo (`../MacCleaner/scripts/release.sh`) má stejnou chybu v pollingu – oprava zatím neprovedena.
+- Ověření feedu po vydání: `curl -sIL https://github.com/LubosCzech/MacGit/releases/latest/download/appcast.xml` → 200.

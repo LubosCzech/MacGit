@@ -128,9 +128,10 @@ publish)
   gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --latest
   # Příznak se v API neprojeví okamžitě, proto se na něj chvíli čeká.
   for attempt in $(seq 1 12); do
-    LATEST_TAG="$(public_api '/releases/latest' | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])')"
+    # Hned po zveřejnění vrací API často ještě 404 – chyba tu znamená „zatím ne“, ne konec.
+    LATEST_TAG="$(public_api '/releases/latest' 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["tag_name"])' 2>/dev/null || true)"
     if [[ "$LATEST_TAG" == "$TAG" ]]; then break; fi
-    [[ "$attempt" != 12 ]] || { echo "GitHub ani po minutě neoznačil $TAG jako latest, vrací $LATEST_TAG." >&2; exit 1; }
+    [[ "$attempt" != 12 ]] || { echo "GitHub ani po minutě neoznačil $TAG jako latest, vrací '${LATEST_TAG:-nic}'." >&2; exit 1; }
     sleep 5
   done
   # Adresa latest/download/ zůstává chvíli v cache CDN, proto se na shodu čeká.

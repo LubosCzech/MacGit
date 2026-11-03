@@ -479,3 +479,72 @@ struct GitErrorSummaryTests {
         #expect(summary.explanation == "something unusual happened")
     }
 }
+
+@Suite struct ConfigBackupTests {
+    func sample(secrets: EncryptedSecrets? = nil) -> ConfigBackup {
+        ConfigBackup(
+            appVersion: "1.0",
+            files: [
+                "state.json": Data(#"{"spaces":[]}"#.utf8),
+                "workspaces/6F9619FF-8B86-D011-B42D-00C04FC964FF.json": Data("{}".utf8),
+                "shelves/6F9619FF-8B86-D011-B42D-00C04FC964FF/wip.patch": Data([0, 1, 2, 255])
+            ],
+            preferences: ["revisionAppearance": .string("dark"), "sidebarWidth": .double(240), "changesAsTree": .bool(true)],
+            secrets: secrets
+        )
+    }
+
+    @Test func roundTripsWithoutSecrets() throws {
+        let backup = sample()
+        let decoded = try ConfigBackup.decode(try backup.encoded())
+        #expect(decoded.files == backup.files)
+        #expect(decoded.preferences == backup.preferences)
+        #expect(decoded.secrets == nil)
+    }
+
+    @Test func secretsNeedTheRightPassword() throws {
+        let sealed = try EncryptedSecrets.seal(["account.6F9619FF-8B86-D011-B42D-00C04FC964FF": "ghp_secret"], password: "kočka", iterations: 100_000)
+        let decoded = try ConfigBackup.decode(try sample(secrets: sealed).encoded())
+        #expect(try decoded.secrets?.open(password: "kočka") == ["account.6F9619FF-8B86-D011-B42D-00C04FC964FF": "ghp_secret"])
+        #expect(throws: BackupError.wrongPassword) { try decoded.secrets?.open(password: "pes") }
+        // Token nesmí ležet v souboru jako čitelný text.
+        #expect(!(String(data: try sample(secrets: sealed).encoded(), encoding: .utf8) ?? "").contains("ghp_secret"))
+    }
+
+    @Test func tamperedSecretsAreRejected() throws {
+        var sealed = try EncryptedSecrets.seal(["account.6F9619FF-8B86-D011-B42D-00C04FC964FF": "x"], password: "heslo", iterations: 100_000)
+        sealed.sealed[sealed.sealed.count - 1] ^= 0xFF
+        #expect(throws: BackupError.wrongPassword) { try sealed.open(password: "heslo") }
+    }
+
+    @Test func rejectsPathsOutsideRevisionFolder() throws {
+        for path in ["../.ssh/id_ed25519", "/etc/hosts", "workspaces/../state.json", "shelves/x", "askpass.sh", "workspaces/a/b.json", ""] {
+            #expect(!ConfigBackup.isAllowedPath(path), "\(path)")
+        }
+        var backup = sample()
+        backup.files["../../.zshrc"] = Data("evil".utf8)
+        #expect(throws: BackupError.unsafePath("../../.zshrc")) { try ConfigBackup.decode(try backup.encoded()) }
+    }
+
+    @Test func allowsOnlyKnownSecretKeys() {
+        #expect(ConfigBackup.isAllowedSecretKey("account.6F9619FF-8B86-D011-B42D-00C04FC964FF"))
+        #expect(ConfigBackup.isAllowedSecretKey("project.6F9619FF-8B86-D011-B42D-00C04FC964FF.password"))
+        #expect(ConfigBackup.isAllowedSecretKey("ssh./Users/me/.ssh/id_ed25519"))
+        #expect(!ConfigBackup.isAllowedSecretKey("internet-password.github.com"))
+        #expect(!ConfigBackup.isAllowedSecretKey("account.nope"))
+    }
+
+    @Test func rejectsNewerFormatAndGarbage() throws {
+        var backup = sample()
+        backup.format = ConfigBackup.currentFormat + 1
+        #expect(throws: BackupError.newerFormat(ConfigBackup.currentFormat + 1)) { try ConfigBackup.decode(try backup.encoded()) }
+        #expect(throws: BackupError.notABackup) { try ConfigBackup.decode(Data("hello".utf8)) }
+    }
+
+    @Test func readsPreferenceTypesFromUserDefaults() {
+        #expect(ConfigBackup.PreferenceValue(NSNumber(value: true)) == .bool(true))
+        #expect(ConfigBackup.PreferenceValue(NSNumber(value: 240.5)) == .double(240.5))
+        #expect(ConfigBackup.PreferenceValue(NSNumber(value: 3)) == .int(3))
+        #expect(ConfigBackup.PreferenceValue([1, 2]) == nil)
+    }
+}

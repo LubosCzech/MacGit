@@ -252,7 +252,25 @@ final class RepositoryModel {
 
     // MARK: Workspace persistence
 
+    /// Při obnově ze zálohy se ukládání zastaví – starý stav v paměti nesmí přepsat obnovené soubory.
+    private var persistenceSuspended = false
+
+    /// Uloží workspace hned (před zálohou), bez čekání na odložené uložení.
+    func saveWorkspaceNow() {
+        saveTask?.cancel()
+        guard !persistenceSuspended, let store else { return }
+        let data = try? JSONEncoder().encode(workspace)
+        try? data?.write(to: store.workspaceURL(for: project.id), options: .atomic)
+    }
+
+    func suspendPersistence() {
+        persistenceSuspended = true
+        saveTask?.cancel()
+        saveTask = nil
+    }
+
     private func scheduleWorkspaceSave() {
+        guard !persistenceSuspended else { return }
         saveTask?.cancel()
         saveTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(400))

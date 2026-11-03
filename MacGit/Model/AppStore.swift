@@ -93,6 +93,18 @@ final class AppStore {
         try? encoder.encode(state).write(to: stateURL, options: .atomic)
     }
 
+    /// Zapíše všechno rozpracované na disk – volá se před zálohou.
+    func flushPendingSaves() {
+        save()
+        for model in models.values { model.saveWorkspaceNow() }
+    }
+
+    /// Zastaví veškeré ukládání až do restartu – volá se těsně před obnovou ze zálohy.
+    func suspendPersistence() {
+        isLoading = true
+        for model in models.values { model.suspendPersistence() }
+    }
+
     private func installAskpass() {
         let data = Data(GitContext.askpassScript.utf8)
         if (try? Data(contentsOf: URL(fileURLWithPath: askpassPath))) != data {
