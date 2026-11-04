@@ -548,3 +548,45 @@ struct GitErrorSummaryTests {
         #expect(ConfigBackup.PreferenceValue([1, 2]) == nil)
     }
 }
+
+@Suite struct SystemSSHConfigTests {
+    let home = "/Users/test"
+
+    @Test func defaultKeyNeedsNoConfig() {
+        #expect(SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/id_ed25519", config: "", home: home))
+        #expect(!SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/id_ed25519_macgit", config: "", home: home))
+    }
+
+    @Test func explicitIdentityFileReplacesDefaults() {
+        let config = "Host gitlab.com\n  IdentityFile ~/.ssh/work_key\n"
+        // Jakmile config uvádí IdentityFile, ssh výchozí názvy sám nezkouší.
+        #expect(!SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/id_ed25519", config: config, home: home))
+        #expect(SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/work_key", config: config, home: home))
+        #expect(SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/work_key", config: "identityfile=\"~/.ssh/work_key\"", home: home))
+        #expect(!SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/work_key", config: "# IdentityFile ~/.ssh/work_key", home: home))
+    }
+
+    @Test func blockKeepsExistingDefaultKeysWorking() {
+        let block = SSHKeyManager.configBlock(keyPath: "\(home)/.ssh/id_ed25519_macgit", config: "", home: home,
+                                              existingKeyPaths: ["\(home)/.ssh/id_rsa", "\(home)/.ssh/id_ed25519_macgit", "\(home)/.ssh/other"])
+        #expect(block.contains("Host *"))
+        #expect(block.contains("  IdentityFile ~/.ssh/id_rsa\n"))
+        #expect(block.contains("  IdentityFile ~/.ssh/id_ed25519_macgit\n"))
+        #expect(!block.contains("other"))
+        let combined = block
+        #expect(SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/id_rsa", config: combined, home: home))
+        #expect(SSHKeyManager.isUsedBySystemSSH(keyPath: "\(home)/.ssh/id_ed25519_macgit", config: combined, home: home))
+    }
+
+    @Test func blockDoesNotRepeatDefaultsWhenConfigAlreadyListsKeys() {
+        let block = SSHKeyManager.configBlock(keyPath: "\(home)/.ssh/new", config: "IdentityFile ~/.ssh/work", home: home,
+                                              existingKeyPaths: ["\(home)/.ssh/id_rsa"])
+        #expect(!block.contains("id_rsa"))
+        #expect(block.contains("IdentityFile ~/.ssh/new"))
+    }
+
+    @Test func suggestsDefaultNameWhenFree() {
+        #expect(SSHKeyManager.suggestedKeyName(existing: ["id_rsa"]) == "id_ed25519")
+        #expect(SSHKeyManager.suggestedKeyName(existing: ["id_ed25519"]) == "id_ed25519_revision")
+    }
+}

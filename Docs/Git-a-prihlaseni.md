@@ -11,6 +11,18 @@
 
 `AppStore.credential(for:)` → `GitCredential` → `GitContext.credential(_:askpassPath:)` (env + `-c` volby). Kontext se použije **jen u síťových operací** (`GitRepository.networkContext`).
 
+### Systémové přihlášení a vlastní název klíče
+
+`ssh` sám zkouší jen výchozí názvy (`id_rsa`, `id_ecdsa`, `id_ed25519`…), a to **jen dokud `~/.ssh/config` neobsahuje žádný `IdentityFile`** – jakmile tam jeden je, zkouší jen uvedené (ověřeno přes `ssh -G`). Klíč s vlastním názvem (dřív výchozí `id_ed25519_macgit`) proto přihlášení „Systémové“ nepoužilo a GitLab/GitHub hlásil „Permission denied (publickey)“, i když byl veřejný klíč nahraný.
+
+- Generování klíče nabízí `id_ed25519` (když je volný, jinak `id_ed25519_revision`) a přepínač „Použít pro systémové přihlášení“.
+- Nastavení → SSH klíče ukazuje u každého klíče, jestli ho systém použije, a tlačítkem ho zapíše do `~/.ssh/config` (`SSHKeyManager.useForSystemSSH`): připíše blok `Host *` s `AddKeysToAgent yes`, `UseKeychain yes` a `IdentityFile` nového klíče **i stávajících výchozích klíčů** (jinak by přestaly fungovat). Soubor se jen doplňuje na konec, nikdy nepřepisuje (může být symlink z dotfiles).
+- Passphrase nového klíče jde do Klíčenky macOS přes `ssh-add --apple-use-keychain`, takže ji ssh najde i v terminálu.
+
+### Chyba: výběr „SSH klíč“ hlásil prázdnou ~/.ssh
+
+`AuthEditor` měl seznam klíčů v `@State` a plnil ho modifikátor `.loadKeys()` volaný z rodiče. `@State` nastavená z kopie pohledu před vložením do hierarchie se do zobrazeného pohledu nepropíše → seznam zůstal vždy prázdný. Editor si teď klíče načítá sám v `onAppear` ve vlastním `body`. Obecně: `@State` měnit jen zevnitř pohledu.
+
 ### Askpass
 
 Tajné údaje se gitu/ssh nikdy nepředávají v argumentech. `askpass.sh` v Application Support (0700) vrací `$MACGIT_USERNAME` / `$MACGIT_SECRET` z prostředí procesu:

@@ -2,6 +2,10 @@
 
 Proč je něco udělané právě takhle a co už bylo zkoušeno a odmítnuto. Nejnovější nahoře. Než něco „zjednodušíš“, podívej se sem.
 
+## 2026-11-04 · SSH klíč na novém Macu
+- Klíč vygenerovaný v Revision (`id_ed25519_macgit`) nefungoval se „Systémovým“ přihlášením – ssh vlastní názvy sám nezkouší. Revision teď nabízí výchozí název a umí klíč zapsat do `~/.ssh/config` (s výslovným přepínačem / tlačítkem, protože jde o soubor mimo Revision).
+- Opravena chyba prázdného výběru klíčů v dialogu klonování a v inspektoru.
+
 ## 2026-11-01 · Zálohy konfigurace
 - Tajné údaje v záloze jen volitelně a jen šifrované heslem; automatické zálohy je nikdy neobsahují.
 - Obnova přes restart aplikace, ne přenačtení za běhu – spolehlivější pro všechna okna a cache modelů.

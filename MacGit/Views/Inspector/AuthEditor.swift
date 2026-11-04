@@ -12,6 +12,14 @@ struct AuthEditor: View {
     @State private var keys: [SSHKey] = []
 
     var body: some View {
+        Group { content }
+            // Klíče si editor načítá sám: @State nastavená zvenku (z modifikátoru rodiče)
+            // se do zobrazeného pohledu nepropíše a seznam by zůstal prázdný.
+            .onAppear { keys = SSHKeyManager.listKeys() }
+    }
+
+    @ViewBuilder
+    private var content: some View {
         Picker("Metoda", selection: Binding(
             get: { auth.kind },
             set: { kind in
@@ -34,7 +42,7 @@ struct AuthEditor: View {
 
         switch auth {
         case .system:
-            Text("Použije se ssh-agent, ~/.ssh/config a credential helper z konfigurace gitu.")
+            Text("Použije se ssh-agent, ~/.ssh/config a credential helper z konfigurace gitu – stejně jako git v terminálu. Klíč s vlastním názvem musí být v ~/.ssh/config (Nastavení → SSH klíče).")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -78,12 +86,6 @@ struct AuthEditor: View {
         default:
             return nil
         }
-    }
-}
-
-extension AuthEditor {
-    func loadKeys() -> some View {
-        onAppear { keys = SSHKeyManager.listKeys() }
     }
 }
 

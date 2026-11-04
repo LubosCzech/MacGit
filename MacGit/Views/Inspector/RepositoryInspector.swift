@@ -41,7 +41,6 @@ struct RepositoryInspector: View {
 
                 Section {
                     AuthEditor(auth: binding.auth, secret: $secret, remoteURL: model.remotes.first?.fetchURL)
-                        .loadKeys()
                 } header: {
                     Text("Přihlášení k remotu")
                 } footer: {

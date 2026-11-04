@@ -345,8 +345,21 @@ private struct SSHKeysSettings: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
+                            if systemKeys.contains(key.privateKeyPath) {
+                                Label("Používá systémové přihlášení i terminál", systemImage: "checkmark.circle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.success)
+                            } else {
+                                Label("Systémové přihlášení ho nepoužije", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.warning)
+                            }
                         }
                         Spacer()
+                        if !systemKeys.contains(key.privateKeyPath) {
+                            Button("Použít pro systémové přihlášení") { useForSystem(key) }
+                                .help("Zapíše klíč do ~/.ssh/config, aby ho použil git v Revision s přihlášením „Systémové“ i v terminálu.")
+                        }
                         Button("Kopírovat veřejný") {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(key.publicKey, forType: .string)
@@ -381,10 +394,32 @@ private struct SSHKeysSettings: View {
             }
             .padding(14)
         }
-        .onAppear { keys = SSHKeyManager.listKeys() }
-        .sheet(isPresented: $showGenerate, onDismiss: { keys = SSHKeyManager.listKeys() }) {
-            GenerateKeySheet()
+        .onAppear(perform: reload)
+        .sheet(isPresented: $showGenerate, onDismiss: reload) {
+            GenerateKeySheet(existing: keys.map(\.name)) { message = $0 }
         }
+    }
+
+    /// Klíče, které ssh použije i bez Revision (výchozí název nebo uvedené v ~/.ssh/config).
+    @State private var systemKeys: Set<String> = []
+
+    private func reload() {
+        keys = SSHKeyManager.listKeys()
+        let config = (try? String(contentsOf: SSHKeyManager.configFile, encoding: .utf8)) ?? ""
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        systemKeys = Set(keys.map(\.privateKeyPath).filter {
+            SSHKeyManager.isUsedBySystemSSH(keyPath: $0, config: config, home: home)
+        })
+    }
+
+    private func useForSystem(_ key: SSHKey) {
+        do {
+            try SSHKeyManager.useForSystemSSH(key)
+            message = "Klíč \(key.name) je zapsaný v ~/.ssh/config."
+        } catch {
+            message = error.localizedDescription
+        }
+        reload()
     }
 
     private func upload(_ key: SSHKey, to account: HostingAccount, purpose: HostingClient.SSHKeyPurpose) async {
@@ -399,17 +434,31 @@ private struct SSHKeysSettings: View {
 }
 
 private struct GenerateKeySheet: View {
+    let existing: [String]
+    let onDone: (String) -> Void
+
+    @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    @State private var name = "id_ed25519_macgit"
+    @State private var name = ""
     @State private var comment = "\(NSUserName())@\(Host.current().localizedName ?? "mac")"
     @State private var passphrase = ""
+    @State private var useForSystem = true
     @State private var error: String?
+
+    private var needsConfig: Bool { !SSHKeyManager.defaultIdentityNames.contains(name) }
 
     var body: some View {
         Form {
             TextField("Soubor v ~/.ssh", text: $name)
             TextField("Komentář", text: $comment)
             SecureField("Passphrase (volitelné)", text: $passphrase)
+            Toggle("Použít pro systémové přihlášení", isOn: $useForSystem)
+            Text(needsConfig
+                 ? "Klíč se zapíše do ~/.ssh/config, aby ho git použil i s přihlášením „Systémové“ a v terminálu."
+                 : "Výchozí název – ssh ho použije sám. Passphrase se uloží do Klíčenky macOS, aby se na ni git neptal.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             if let error { Label(error, systemImage: "xmark.octagon").foregroundStyle(Theme.statusDeleted) }
         }
         .formStyle(.grouped)
@@ -418,24 +467,36 @@ private struct GenerateKeySheet: View {
                 Spacer()
                 Button("Zrušit") { dismiss() }
                 Button("Vygenerovat Ed25519") {
-                    Task {
-                        do {
-                            _ = try await SSHKeyManager.generate(name: name, comment: comment, passphrase: passphrase)
-                            if !passphrase.isEmpty {
-                                Keychain.set(passphrase, for: Keychain.sshPassphraseKey(SSHKeyManager.sshDirectory.appendingPathComponent(name).path))
-                            }
-                            dismiss()
-                        } catch {
-                            self.error = error.localizedDescription
-                        }
-                    }
+                    Task { await generate() }
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(name.isEmpty)
             }
             .padding(14)
         }
-        .frame(width: 440, height: 280)
+        .frame(width: 460, height: 340)
+        .onAppear { if name.isEmpty { name = SSHKeyManager.suggestedKeyName(existing: existing) } }
+    }
+
+    private func generate() async {
+        do {
+            let key = try await SSHKeyManager.generate(name: name, comment: comment, passphrase: passphrase)
+            if !passphrase.isEmpty {
+                Keychain.set(passphrase, for: Keychain.sshPassphraseKey(key.privateKeyPath))
+            }
+            if useForSystem {
+                try SSHKeyManager.useForSystemSSH(key)
+                // Passphrase do Klíčenky macOS: ssh (UseKeychain) ji pak najde sám, i po restartu.
+                if !passphrase.isEmpty {
+                    try await SSHKeyManager.addToAgent(key.privateKeyPath, passphrase: passphrase,
+                                                       askpassPath: store.askpassPath, storeInKeychain: true)
+                }
+            }
+            onDone("Klíč \(key.name) vytvořen. Nahraj veřejný klíč na GitHub/GitLab tlačítkem Nahrát.")
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }
 

@@ -1,16 +1,14 @@
-# Revision 1.0
+# Revision 1.1
 
-První veřejné vydání nativního git klienta pro macOS 26.
+## Novinky
 
-## Hlavní funkce
+- **Zálohy konfigurace** v Nastavení → Zálohy. Revision jednou denně uloží prostory, projekty, účty, changelisty, rozepsané commit zprávy, shelf a nastavení vzhledu a drží posledních 14 záloh. Složku můžeš přesunout třeba na iCloud Drive.
+- Záloha se dá uložit i ručně do souboru, například pro přechod na nový Mac. Hesla a tokeny do ní můžeš volitelně přibalit, zašifrované heslem, které zadáš.
+- Obnovení ze zálohy nejdřív uloží současný stav, takže jde vrátit, a pak Revision restartuje.
 
-- Prostory pro třídění repozitářů, changelisty, shelf a commit jen vybraných souborů.
-- GitHub a GitLab: přihlášení tokenem, klonování, nahrání SSH klíče, odkaz na nový PR/MR.
-- Podepisování commitů (GPG, SSH, X.509) a ověřování podpisů v historii.
-- AI review větví i jednotlivých commitů přes nainstalované CLI agenty (Claude, Codex, Cursor) v dočasné kopii, která nesahá na tvou pracovní složku.
-- Dva styly rozhraní: značkový Revision s Liquid Glass a Klasický podle Apple HIG, oba ve světlé i tmavé variantě.
+## Opravy
 
-## Aktualizace a podpora
-
-- Aplikace se aktualizuje přes Sparkle. Kontrola je volitelná v Nastavení → Aktualizace, instalaci vždy potvrzuješ.
-- V okně O aplikaci a v Nastavení je odkaz na Buy Me a Coffee. Revision se po týdnu a pak nejvýš jednou za měsíc zeptá, jestli ti slouží; po potvrzení příspěvku už nikdy.
+- SSH klíč vygenerovaný v Revision teď funguje i s přihlášením „Systémové“ a v terminálu. Nový klíč dostane výchozí název `id_ed25519` a na přání se zapíše do `~/.ssh/config`.
+- V Nastavení → SSH klíče je u každého klíče vidět, jestli ho systém použije. Klíč s vlastním názvem jde jedním tlačítkem zapsat do `~/.ssh/config`.
+- Výběr SSH klíče v dialogu klonování a v nastavení projektu už nehlásí prázdnou složku `~/.ssh`.
+- Hlášení „Server odmítl SSH klíč“ srozumitelněji vysvětluje, co zkontrolovat.

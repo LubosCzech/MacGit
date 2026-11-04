@@ -131,7 +131,6 @@ struct CloneSheet: View {
 
                 Section("Přihlášení") {
                     AuthEditor(auth: $auth, secret: $secret, remoteURL: effectiveURL)
-                        .loadKeys()
                 }
 
                 if let error {

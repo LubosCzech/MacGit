@@ -47,7 +47,7 @@ public struct GitErrorSummary: Sendable, Equatable {
               explanation: "Remote používá HTTPS a git nemá uložené jméno ani heslo. Nastav přihlášení v inspektoru → Repozitář, nebo změň remote na SSH."),
         Known(needles: ["Permission denied (publickey"],
               title: "Server odmítl SSH klíč",
-              explanation: "Tvůj SSH klíč není na serveru nahraný nebo nemáš k repozitáři přístup. Přidej veřejný klíč ve svém profilu na GitHubu/GitLabu."),
+              explanation: "Server nedostal klíč, který zná. Buď veřejný klíč není nahraný v profilu na GitHubu/GitLabu, nebo ho ssh nepoužívá – klíč s jiným názvem než id_ed25519 / id_rsa je potřeba zapsat do ~/.ssh/config (Nastavení → SSH klíče → Použít pro systémové přihlášení), případně zvolit u projektu přihlášení SSH klíčem. Může také chybět přístup k repozitáři."),
         Known(needles: ["Repository not found", "does not appear to be a git repository", "repository '"],
               title: "Repozitář nebyl nalezen",
               explanation: "Adresa remotu je špatně, nebo k repozitáři nemáš přístup."),

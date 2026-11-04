@@ -116,6 +116,87 @@ public enum SSHKeyManager {
         }
     }
 
+    // MARK: Systémové přihlášení
+
+    /// Názvy klíčů, které ssh zkouší sám, když konfigurace neuvádí žádný `IdentityFile`.
+    public static let defaultIdentityNames = ["id_rsa", "id_ecdsa", "id_ecdsa_sk", "id_ed25519", "id_ed25519_sk"]
+
+    public static var configFile: URL { sshDirectory.appendingPathComponent("config") }
+
+    /// Název pro nový klíč: výchozí `id_ed25519`, který ssh použije bez další konfigurace;
+    /// když už existuje, jméno, které je potřeba zapsat do ~/.ssh/config.
+    public static func suggestedKeyName(existing: [String]) -> String {
+        existing.contains("id_ed25519") ? "id_ed25519_revision" : "id_ed25519"
+    }
+
+    /// Použije ssh tento klíč i bez Revision (systémové přihlášení, terminál)?
+    ///
+    /// Výchozí názvy ssh zkouší sám, ale jen dokud konfigurace neuvádí žádný `IdentityFile` –
+    /// pak zkouší jen ty uvedené. Ostatní klíče musí být v konfiguraci uvedené výslovně.
+    public static func isUsedBySystemSSH(keyPath: String, config: String, home: String) -> Bool {
+        let identities = identityFiles(in: config, home: home)
+        let name = (keyPath as NSString).lastPathComponent
+        let inSSHDirectory = (keyPath as NSString).deletingLastPathComponent == home + "/.ssh"
+        if identities.isEmpty, inSSHDirectory, defaultIdentityNames.contains(name) { return true }
+        return identities.contains(keyPath)
+    }
+
+    /// Cesty ze všech `IdentityFile` v konfiguraci (s rozvinutým `~`).
+    static func identityFiles(in config: String, home: String) -> [String] {
+        config.split(whereSeparator: \.isNewline).compactMap { rawLine in
+            let line = rawLine.trimmingCharacters(in: .whitespaces)
+            guard !line.hasPrefix("#") else { return nil }
+            // `IdentityFile cesta` i `IdentityFile=cesta`, klíčové slovo bez ohledu na velikost písmen.
+            let parts = line.split(maxSplits: 1, whereSeparator: { $0 == " " || $0 == "\t" || $0 == "=" })
+            guard parts.count == 2, parts[0].lowercased() == "identityfile" else { return nil }
+            var path = parts[1].trimmingCharacters(in: CharacterSet(charactersIn: " \t=\""))
+            if path.hasPrefix("~/") { path = home + path.dropFirst(1) }
+            return path
+        }
+    }
+
+    /// Blok, který se připíše na konec ~/.ssh/config. Vedle nového klíče uvádí i výchozí klíče,
+    /// které na Macu už jsou – jakmile konfigurace obsahuje `IdentityFile`, ssh je sám nezkouší.
+    static func configBlock(keyPath: String, config: String, home: String, existingKeyPaths: [String]) -> String {
+        var paths: [String] = []
+        if identityFiles(in: config, home: home).isEmpty {
+            let defaults = defaultIdentityNames.map { home + "/.ssh/" + $0 }
+            paths += defaults.filter { existingKeyPaths.contains($0) && $0 != keyPath }
+        }
+        paths.append(keyPath)
+        func tilde(_ path: String) -> String {
+            path.hasPrefix(home + "/") ? "~" + path.dropFirst(home.count) : path
+        }
+        var lines = ["", "# Přidal Revision: klíče pro přihlášení k git serverům (i z terminálu).", "Host *"]
+        lines += ["  AddKeysToAgent yes", "  UseKeychain yes"]
+        lines += paths.map { "  IdentityFile \(tilde($0))" }
+        return lines.joined(separator: "\n") + "\n"
+    }
+
+    /// Zapíše klíč do ~/.ssh/config, aby ho použilo systémové přihlášení i git v terminálu.
+    public static func useForSystemSSH(_ key: SSHKey) throws {
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let fm = FileManager.default
+        let config = (try? String(contentsOf: configFile, encoding: .utf8)) ?? ""
+        guard !isUsedBySystemSSH(keyPath: key.privateKeyPath, config: config, home: home) else { return }
+        try fm.createDirectory(at: sshDirectory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        var addition = configBlock(keyPath: key.privateKeyPath, config: config, home: home,
+                                   existingKeyPaths: listKeys().map(\.privateKeyPath))
+        if !config.isEmpty, !config.hasSuffix("\n") { addition = "\n" + addition }
+        // Připisujeme na konec, nepřepisujeme: config může být symlink (dotfiles) nebo mít
+        // vlastní práva a nic z toho, co v něm je, nesmí zmizet.
+        if fm.fileExists(atPath: configFile.path) {
+            let handle = try FileHandle(forWritingTo: configFile)
+            defer { try? handle.close() }
+            try handle.seekToEnd()
+            try handle.write(contentsOf: Data(addition.utf8))
+        } else {
+            guard fm.createFile(atPath: configFile.path, contents: Data(addition.utf8), attributes: [.posixPermissions: 0o600]) else {
+                throw GitError(arguments: ["ssh"], status: 1, message: "Nepodařilo se vytvořit ~/.ssh/config.")
+            }
+        }
+    }
+
     public static func generate(name: String, comment: String, passphrase: String) async throws -> SSHKey {
         let path = sshDirectory.appendingPathComponent(name).path
         guard !FileManager.default.fileExists(atPath: path) else {
